@@ -71,7 +71,7 @@ let dump_instr = fun i -> match i with
         Printf.printf "r%d <- r%d x %d mod 256\n" rd rs v
 | Load (rd, rs, im) ->
         Printf.printf "r%d <- MEM[r%d+%d]\n" rd rs im
-| Store (rs, rd, im) ->
+| Store (rd, rs, im) ->
         Printf.printf "MEM[r%d+%d] <- r%d\n" rs rd im
 | In rd ->
         Printf.printf "r%d <- getchar()\n" rd
@@ -175,12 +175,12 @@ let instr_to_bin = fun i caddr assoc ->
             if -16 <= v && v <= 15 then
             	instr_to_bin_type1b 0b100 0 1 rd rs v
             else
-                failwith ("Load in memeory: Bad value imm5")               
+                failwith ("Load in memory: Bad value imm5")               
     | Store (rs,rd,v) ->
             if -16 <= v && v <= 15 then
             	instr_to_bin_type1b 0b100 0 0 rd rs v
             else
-                failwith ("Load in memeory: Bad value imm5")               
+                failwith ("Load in memory: Bad value imm5")               
     | In rd ->
             instr_to_bin_type2 0b100 1 1 rd 0
     | Out rs ->
