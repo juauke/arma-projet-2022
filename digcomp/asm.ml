@@ -36,10 +36,13 @@ type instr =
     | And   of (int * int * int)        (** rd, rs, rt *)
     | Add   of (int * int * int * bool) (** rd, rs, rt, sub? *)
     | Addi  of (int * int * int * bool) (** rd, rs, imm5, sub? *)
-    | Load  of (int * int) (** rd, rs *)
-    | Store of (int * int) (** rs, rd *)
+    | Mul   of (int * int * int) (** rd, rs, rt *)
+    | Muli  of (int * int * int) (** rd, rs, imm5 *)
+    | Load  of (int * int * int ) (** rd, rs, imm5 *)
+    | Store of (int * int * int ) (** rs, rd, imm5 *)
     | In    of int         (** rd *)
     | Out   of int         (** rs *)
+    | Jr    of (int * int) (** rd, rs *)
     | CJmp  of (int * int * label * cond) (** rd, rs, addr, cond *)
     | Jmp   of label (** label name *)
     
@@ -62,14 +65,19 @@ let dump_instr = fun i -> match i with
 | Addi (rd,rs,v,b) ->
         let c = if b then '-' else '+' in
         Printf.printf "r%d <- r%d %c %d\n" rd rs c v
-| Load (rd, rs) ->
-        Printf.printf "r%d <- MEM[r%d]\n" rd rs
-| Store (rs, rd) ->
-        Printf.printf "MEM[r%d] <- r%d\n" rs rd
+| Mul (rd,rs,rt) ->
+        Printf.printf "r%d <- r%d x r%d mod 256\n" rd rs rt
+| Muli (rd,rs,v) ->
+        Printf.printf "r%d <- r%d x %d mod 256\n" rd rs v
+| Load (rd, rs, im) ->
+        Printf.printf "r%d <- MEM[r%d+%d]\n" rd rs im
+| Store (rs, rd, im) ->
+        Printf.printf "MEM[r%d+%d] <- r%d\n" rs rd im
 | In rd ->
         Printf.printf "r%d <- getchar()\n" rd
 | Out rs ->
         Printf.printf "putchar(r%d)\n" rs
+| Jr (rd,rs) -> Printf.printf "goto r%d + r%d x 256\n" rs rd
 | CJmp (rd,rs,lbl,cd) ->
         let op = match cd with
                  | LT -> "<"
@@ -159,14 +167,26 @@ let instr_to_bin = fun i caddr assoc ->
     | Addi (rd,rs,v,b) ->
             let f1 = if b then 1 else 0 in
             instr_to_bin_type1b 0b010 f1 0 rd rs v
-    | Load (rd,rs) ->
-            instr_to_bin_type1b 0b100 0 1 rd rs 0
-    | Store (rs,rd) ->
-            instr_to_bin_type1b 0b100 0 0 rd rs 0
+    | Mul (rd,rs,rt) ->
+            instr_to_bin_type1 0b011 0 1 rd rs rt
+    | Muli (rd,rs,v) ->
+            instr_to_bin_type1b 0b011 0 0 rd rs v
+    | Load (rd,rs,v) ->
+            if -16 <= v && v <= 15 then
+            	instr_to_bin_type1b 0b100 0 1 rd rs v
+            else
+                failwith ("Load in memeory: Bad value imm5")               
+    | Store (rs,rd,v) ->
+            if -16 <= v && v <= 15 then
+            	instr_to_bin_type1b 0b100 0 0 rd rs v
+            else
+                failwith ("Load in memeory: Bad value imm5")               
     | In rd ->
             instr_to_bin_type2 0b100 1 1 rd 0
     | Out rs ->
             instr_to_bin_type2 0b100 1 0 rs 0
+    | Jr (rd,rs) ->
+            instr_to_bin_type1b 0b111 0 0 rd rs 0
     | CJmp (rd,rs,lbl,cd) ->
             let (f1,f2) = match cd with
                           | EQ -> (0,0)

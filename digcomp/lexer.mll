@@ -16,10 +16,13 @@ let _ =
       "addi", ADDI;
       "sub",  SUB;
       "subi", SUBI;
+      "mul",  MUL;
+      "muli", MULI;
       "ld",   LD;
       "st",   ST;
       "in",   IN;
       "out",  OUT;
+      "jr",   JR;
       "jlt",  JLT;
       "jle",  JLE;
       "je",   JEQ;
