@@ -28,22 +28,27 @@ loop:	in r7
 	jeq r7, r5, end
 	jlt r7, r0, loop
 	jlt r1, r7, loop
-	subi r7, r7, 24
-	subi r7, r7, 24
+	subi r6, r7, 24
+	subi r7, r6, 24
 	mul r5, r2, r3
-	add r5, r5, r7
-	jlt r4, r5, end
-	addi r2, r5, 0
-	muli r3, r3, 10
-	addi r7, r7, 24
-	addi r7, r7, 24
+	add r6, r5, r7
+	jlt r4, r6, end
+	
+	addi r2, r6, 0
+	
+	muli r6, r3, 10
+	
+	addi r6, r3, 0
+	
+	addi r6, r7, 24
+	addi r7, r6, 24
 	out r7
 	jmp loop
 
 end:	ldi r6, 34
 	out r6
-	addi r2, r2, 24
-	addi r2, r2, 24
+	addi r6, r2, 24
+	addi r2, r6, 24
 	out r2
 	ldi r6, 34
 	out r6
