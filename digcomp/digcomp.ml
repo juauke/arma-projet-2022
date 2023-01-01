@@ -102,7 +102,7 @@ let _ =
             let _ = Printf.printf "--------\n" in
             let _ = List.iteri
                         (fun idx instr ->
-                            let _ = Printf.printf "%4d: " idx in
+                            let _ = Printf.printf "%4d [x%04x]: " idx idx in
                             dump_instr instr
                         )
                         code
