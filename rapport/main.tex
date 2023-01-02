@@ -1,0 +1,600 @@
+\documentclass[twoside, 12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+\frenchbsetup{StandardLists=true}
+
+\usepackage{fancyhdr}
+
+\setlength{\headheight}{14.49998pt}
+\addtolength{\topmargin}{-2.49998pt}
+
+\usepackage{listings}
+
+\usepackage{graphicx}
+\graphicspath{{img/}}
+
+\usepackage[margin=2cm]{geometry}
+
+\usepackage{color,soul}
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{minted}
+
+\usepackage{subfigure}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+\usepackage{enumitem}
+
+% #2 scale centered figure
+% usage: \hcf{figure}{scale}{caption}
+\newcommand{\cf}[3]{
+    \begin{figure}[!hbt]
+        \centering
+        \includegraphics[scale=#2]{#1}
+    \caption{#3}\label{Fig:#1}
+    \end{figure}
+}
+
+% 3/4 scale centered figure
+% usage: \hcf{figure}{caption}
+\newcommand{\hcf}[2]{\cf{#1}{.75}{#2}}
+
+% 1/2 scale centered figure
+% usage: \qcf{figure}{caption}
+\newcommand{\qcf}[2]{\cf{#1}{.5}{#2}}
+
+% color like links but aren't real ones: false links
+\newcommand{\fl}[1]{\textcolor{blue}{\underline{#1}}}
+
+\begin{document}
+
+\shorthandoff{:}
+
+\newcommand{\tf}[4]{
+\begin{figure}[!htb]
+   \begin{minipage}{0.48\textwidth}
+     \centering
+     \includegraphics[width=\linewidth]{#1}
+     \caption{#2}
+   \end{minipage}\hfill
+   \begin{minipage}{0.48\textwidth}
+     \centering
+     \includegraphics[width=\linewidth]{#3}
+     \caption{#4}
+   \end{minipage}
+\end{figure}
+}
+
+% Unbold subsubsections
+
+\makeatletter
+
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@} {-3.25ex\@plus -1ex \@minus -.2ex}%
+{1.5ex \@plus .2ex}%
+{\color{gray}\normalfont\normalsize\fontsize{12}{17}\selectfont}}
+
+\makeatother
+
+\pagestyle{fancy}
+
+\fancyhead{}\fancyfoot{}
+
+\fancyhead[OC]{ARMA --- Projet : Conception d'un mini-processeur}
+\fancyhead[EC]{Justin \textsc{BABONNEAU}}
+
+\fancyfoot[C]{\thepage}
+
+\title{Architecture Matérielle : \\ 
+\textbf{Projet} --- \textit{Conception d'un mini-processeur}}
+
+\author{Justin \textsc{BABONNEAU}}
+
+\maketitle
+
+\newpage
+
+\section*{Introduction}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{TD 5}
+    \subsection{Exercice 1 - Exécution du premier programme}
+
+\textcolor{gray}{
+Pour le moment, le processeur fourni ne supporte que les instructions \texttt{ldi} et \texttt{addi}. Faire appel
+à toute autre instruction conduit à un comportement non spécifié.
+Le but de cet exercice est d’ajouter le support des sauts inconditionnels, afin de pouvoir simuler
+l’exécution du programme suivant :
+}
+
+{
+\color{gray}
+\begin{verbatim}
+        ldi r1, 42
+        addi r0, r1, 17
+    end: jmp end
+\end{verbatim}
+}
+    
+        \subsubsection*{\textbf{1.1} Donner la valeur de chaque registre à la fin de l’exécution de ce programme.}
+
+A la fin de l'exécution de ce programme, on a :
+\begin{tabular}{|l|c|c|}
+     \hline
+     registre & \textit{r0} & \textit{r1}\\
+     \hline
+     valeur & 59 & 42\\
+     \hline
+\end{tabular}
+
+        \subsubsection*{\textbf{1.2} Traduire à la main le code assembleur en langage machine, sachant que la première instruction sera placée à l’adresse \texttt{0000}.}
+
+    On traduit le code assembleur en langage machine (binaire) : \\
+    {
+        \begin{tabular}{|l|c|c|c|c|c|}
+            \hline
+            instruction & adresse & op & flags & rd & rs rt / imm5\\
+            \hline
+            \texttt{ldi r1, 42} & $0000$ & $000$ & $01$ & $001$ & $00101010$ (imm8) \\
+            \texttt{addi r0, r1, 17} & $0001$ & $010$ & $00$ & $000$ & $001$ (rs) $10001$ (imm5)\\
+            \texttt{end: jmp end} & $0002$ & $111$ & $00$ (imm13(high$_1$)) & $000$ (imm13(high$_2$)) & $00000000$ (imm13(low))\\
+            \hline
+        \end{tabular}
+}
+        \subsubsection*{\textbf{1.3} Compiler le code assembleur avec digcomp. Comparer le contenu des fichiers ainsi produits
+à la réponse de la question précédente.}
+
+    \hcf{compil_addi.png}{Compilation du programme cité ci-dessus avec Digcomp.}
+
+    \tf{addi_hi.png}{Résultat renvoyé pour le \texttt{.hi}}{addi_lo.png}{Résultat renvoyé pour le \texttt{.lo}}
+
+    Etant donné que la partie \texttt{.hi} contient les 8 premiers bits de la ligne et que la partie \texttt{.lo} contient les 8 derniers, on a (en traduisant les résultats hexadécimaux précédents en binaire) :
+    \begin{center}
+        \begin{tabular}{|c|c|c|}
+            \hline
+            adresse & \texttt{.hi} & \texttt{.lo} \\
+            \hline
+             $0000$ & $000\,01\,001$ (0x09) & $00101010$ (0x2a)\\
+             $0001$ & $010\,00\,000$ (0x40) & $001\,10001$ (0x31)\\
+             $0002$ & $111\,00\,000$ (0xe0) & $00000010$ (0x02)\\ 
+             \hline
+        \end{tabular}
+    \end{center}
+
+    Les valeurs obtenues correspondent à celles trouvées précédemment.
+
+        \subsubsection*{\textbf{1.4} Charger les fichiers obtenus dans Diglog, et déterminer le chemin suivi par les données lors de l’exécution de l’instruction \texttt{ldi}. \\
+        \textbf{Note :} Pour faire une exécution pas à pas, on utilisera un générateur en guise d'horloge, sur lequel on pourra cliquer afin de passer au front (montant ou descendant) suivant.}
+
+Lors de l'instruction \texttt{ldi}, on lit sur le front montant la valeur $42$ grâce aux imm ($0b00101010$) et sur le front descendant, on écrit dans le registre \texttt{r0} cette valeur. 
+
+On a maintenant cette horloge :
+    \hcf{clock.png}{Horloge pas à pas.}
+
+        \subsubsection*{\textbf{1.5} Avancer d'un cycle, et déterminer le chemin suivi par les donnée lors de l'exécution de l'instruction \texttt{addi}.}
+
+Lors de l'instruction \texttt{addi}, on lit sur le front montant la valeur du registre \texttt{r0} (c'est-à-dire $42$ ou $0b00101010$) et sur le front descendant, on additionne (avec l'ALU en mode addition) cette valeur avec $17$ ($0b10001$) et on l'écrit dans le registre \texttt{r1}.
+
+        \subsubsection*{\textbf{1.6} Avancer à nouveau d'un cycle, et identifier comment récupérer l'adresse à laquelle il faudra être après le saut.}
+
+Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut que l'on détermine l'écart relatif entre la position actuelle du pointeur courant (PC) et la position à laquelle on veut aller. C'est pourquoi il faut une ALU en mode soustracteur.
+
+        \subsubsection*{\textbf{1.7} Déterminer le rôle des bits de contrôle \textit{write reg}, \textit{arg2\_imm} et \textit{res\_imm}, puis compléter le tableau suivant (mettre X si la valeur du bit de contrôle n'a pas d'influence) : }
+        
+        \begin{tabular}{|l|c|c|c|c|c|}
+              \hline
+             instruction & \textit{do\_jmp\_abs} & \textit{write\_reg} & \textit{arg2\_imm} & \textit{res\_imm} & \textit{do\_sub}\\
+             \hline
+             \texttt{nop}  & 0 & 0 & X & X & 0\\
+             \texttt{ldi}  & 0 & 1 & X & 1 & 0\\
+             \hline
+             \texttt{addi} & 0 & 1 & 1 & 0 & 0\\             
+             \texttt{subi} & 0 & 1 & 1 & 0 & 1\\             
+             \hline
+             \texttt{add}  & 0 & 1 & 0 & 1 & 0\\ 
+             \texttt{sub}  & 0 & 1 & 0 & 1 & 1\\
+             \hline
+             \texttt{jmp}  & 1 & 0 & X & X & 0\\
+             \hline
+        \end{tabular}
+        
+        \subsubsection*{\textbf{1.8} Modifier le processeur afin de gérer l'instruction de saut \texttt{jmp}. Utiliser pour cela le bit de contrôle \textit{do\_jmp\_abs (le bit \textit{do\_jcc} servira plus tard pour les sauts conditionnels)}.}
+
+        \hcf{do_jmp_abs.png}{Bit de contrôle \textit{do\_jmp\_abs}.}
+        J'ai ajouté le bit de contrôle \texttt{do\_jmp\_abs}.
+
+        \hcf{is_jmp.png}{Bit de contrôle \textit{is\_jmp} (seule la partie absolue importe pour l'instant).}
+        J'ai également ajouté le bit de contrôle \textit{is\_jmp}.
+        
+        J'ai aussi ajouté l'arrivée de ce bit de contrôle comme bit de contrôle du compteur de programme.
+
+        \hcf{clock_abs.png}{Ajout du bit de contrôle \textit{do\_jmp\_abs} au compteur de programme.}
+
+\newpage
+
+        \subsection{Exercice 2 - Gestion complète de l'addition et de la soustraction}
+
+        \subsubsection*{\textbf{2.1} Donner la liste des instructions dont l'exécution nécessite d'utiliser l'ALU en tant que soustracteur.}
+
+    Les instructions suivantes ont besoin de l'ALU en tant que soustracteur :
+    \begin{itemize}[nosep]
+        \item les instructions de soustraction : \texttt{subi}, \texttt{sub}
+        \item les instructions de lecture en RAM : \texttt{st}, \texttt{ld} ;
+        \item les sauts conditionnels : \texttt{jeq}, \texttt{jle}, \texttt{jlt}, \texttt{jne}.
+    \end{itemize}\vspace*{-\baselineskip}
+
+        \subsubsection*{\textbf{2.2} Modifier le processeur afin d'obtenir la bonne valeur pour le bit de contrôle \textit{do\_sub}. Vérifier que le processeur gère désormais aussi l'instruction \texttt{subi}.}
+
+    \hcf{do_sub.png}{Bit de contrôle \textit{do\_sub}}
+    Le processeur gère bien l'instruction \texttt{subi}.
+        
+        \subsubsection*{\textbf{2.3} Modifier le banc de registre afin de pouvoir lire les valeurs de deux registres (pas forcément différents) à chaque cycle.}
+
+    \hcf{mod_reg8.png}{Ajout de la seconde rangée de multiplexeurs sur \texttt{reg8} pour lire la valeur d'un deuxième registre}
+
+        \subsubsection*{\textbf{2.4} Pour chaque instruction, déterminer le nombre de lectures de registres à effectuer, ainsi que les bits contenant les numéros de registres à lire.}
+
+\begin{center}
+	\ttfamily
+	\begin{tabular}{|l|c|c|}
+		\hline
+		instr    & lecture(s) & bits pertinents \\
+		\hline
+		nop		&  $0$          & X \\
+		ldi		&  $1$          & rd \\
+		\hline
+		not		&  $1$          & rd \\
+		lsr		&  $2$          & rd, rs \\
+		or		&  $3$          & rd, rs, rt \\
+		and		&  $3$          & rd, rs, rt \\
+		\hline
+		addi	&  $2$          & rd, rs \\
+		add		&  $3$          & rd, rs, rt \\
+		subi	&  $2$          & rd, rs \\
+		sub		&  $3$          & rd, rs, rt \\
+		\hline
+		muli	&  $2$          & rd, rs \\
+		mul		&  $3$          & rd, rs, rt \\
+		\hline
+		st		&  $2$          & rd, rs \\
+		ld		&  $2$          & rd, rs \\
+		out		&  $1$          & rd \\
+		in		&  $1$          & rd \\
+		\hline
+		jr		&  $2$          & rd, rs \\
+		\hline
+		jeq		&  $2$          & rd, rs \\
+		jle		&  $2$          & rd, rs \\
+		jlt		&  $2$          & rd, rs \\
+		jne		&  $2$          & rd, rs \\
+		\hline
+		jmp		&  $0$          & X \\
+		\hline
+	\end{tabular}
+\end{center}
+
+        \subsubsection*{\textbf{2.5} Ajouter le support des instructions \texttt{add} et \texttt{sub}, et proposer un code assembleur de test. \\
+        Vous devrez sûrement modifier le calcul des bits de contrôle introduits dans l'exercice précédent.}
+
+Les instructions \texttt{add} et \texttt{sub} sont désormais supportées.
+
+\tf{test_add.png}{Test de l'instruction \texttt{add}.}{test_sub.png}{Test de l'instruction \texttt{sub}.}
+
+Les bits de contrôle n'ont pas dû être changés (car on avait déjà prévu les cas correspondant à ces deux instructions).
+        
+        \clearpage
+
+        \subsection{Exercice 3 - Entrées/sorties et gestion du saut \texttt{jeq}}
+
+\textcolor{gray}{
+Afin de pouvoir procéder à de vrais tests, il nous manque deux choses :
+\begin{itemize}
+    \item un coté interactif pour accélérer/faciliter les tests, c’est-à-dire la possibilité de saisir des
+entrées au clavier et d’afficher des résultats sur un écran ;
+    \item notre première instruction de saut conditionnel, afin d’augmenter significativement l’expressivité dans les programmes codés en assembleur.
+\end{itemize}
+Pour le premier point, le fichier \textit{io.lgf} fournit déjà un clavier et un écran. Il est possible de
+récupérer une touche saisie au clavier (fils \textit{kb0} à \textit{kb7}) à condition de positionner le bit de contrôle
+\textit{in} à 1. De plus, il est possible d’afficher le caractère dont le code ASCII est la valeur RD (fils
+\textit{RD0} à \textit{RD7}) à condition de positionner le bit de contrôle \textit{out} à 1.
+}
+
+        \subsubsection*{\textbf{3.1} Faire en sorte que les bits de contrôle \textit{in} et \textit{out} reçoivent la bonne valeur.}
+
+\hcf{in_out.png}{Gestion des bits de contrôle \texttt{in} et \texttt{out}.}
+
+        \subsubsection*{\textbf{3.2} Tester le clavier et l'écran. Que se passe-t-il si on récupère les données du clavier alors qu'aucune touche n'a été frappée ? Et si de nombreuses touches ont été frappées depuis la dernière récupération de touche ?}
+
+Si l'on récupère les données du clavier alors qu'aucune touche n'a été frappée, on obtient $255$ ($0b11111111$).
+Si de nombreuses touches ont été frappées, la plus ancienne est remplacée par la touche nouvellement pressée.
+Le \textit{buffer} (tampon) du clavier fonctionne donc comme une file (First In First Out).
+
+        \subsubsection*{\textbf{3.3} Rappeler comment on peut tester que deux valeurs entières sont égales. Modifier l'ALU afin d'avoir une nouvelle sortie, nécessaire à la réalisation du test.}
+
+Pour tester que deux valeurs sont égales, on peut vérifier que leur différence est nulle.
+
+On a ajouté un bit \texttt{Zero} qui permet de savoir si la valeur en sortie de l'ALU est nulle.
+
+        \subsubsection*{\textbf{3.4} Afin de gérer les instructions de saut conditionnel, nous allons utiliser le bit de contrôle \textit{do\_jcc}, qui vaudra 1 si et seulement si l'instruction courante est de type saut conditionnel et qu'il convient d'effectuer le saut en question. \\
+        Faire en sorte que ce bit de contrôle reçoive la bonne valeur lors de l'exécution d'un \texttt{jeq}.}
+
+J'ai décidé de renommer le bit de contrôle en \textit{do\_jmp\_cnd} (car j'utilise \textit{do\_jcc} quand je fais effectivement [la condition est également vérifiée] le saut conditionnel).
+
+\hcf{do_jmp_cnd.png}{Bit de contrôle \textit{do\_jmp\_cnd}}
+
+        \subsubsection*{\textbf{3.5} Modifier le processeur afin de mettre correctement à jour le pointeur d'instruction PC lors de l'exécution d'une instruction \texttt{jeq}.}
+
+        En plus de l'ajout de la question précédente, on a ajouté un bit de contrôle \textit{do\_jcc}, l'arrivée du bit \textit{do\_jcc} comme bit de contrôle au compteur de programme.
+
+        \hcf{do_jcc.png}{Bit de contrôle \textit{do\_jcc}.}
+
+        \hcf{clock_jcc.png}{Ajout du bit de contrôle \textit{do\_jcc} au compteur de programme.}
+
+        \subsubsection*{\textbf{3.6} Tester le bon fonctionnement des sauts conditionnels dans le cas d'un saut :
+        \begin{enumerate}
+            \item en avant (vers une adresse plus grande que la valeur courante dans PC) ;
+            \item en arrière (vers une adresse plus petite que la valeur courante dans PC).
+        \end{enumerate}}
+
+Les deux codes suivants fonctionnent à présent.
+\tf{past_jp.png}{Code de test du saut dans le passé.}{future_jp.png}{Code de test du saut dans le futur.}
+        
+        \subsubsection*{\textbf{3.7} Écrire un code assembleur qui récupère les touches réellement saisies par l'utilisateur, les affichent, et s'arrête dès que l'utilisateur a appuyé sur la touche \textit{Entrée} (\textit{Cr}, de code ASCII 13).}
+
+\hcf{150.png}{Code assembleur.}
+
+        \subsubsection*{\textbf{3.8} Écrire un code assembleur qui récupère un entier $n \in [1, 9]$ et un caractère \textit{c}, puis qui affiche à l'écran un carré de taille $n$ et composé de caractères \textit{c}.}
+
+\hcf{150.png}{Code assembleur.}
+        
+        \newpage
+
+        \subsection{Exercice 4 - Gestion de la mémoire et des autres sauts conditionnels}
+
+        \subsubsection*{\textbf{4.1} Ajouter le support des instructions \texttt{ld} et \texttt{st}. Pour cela, il faudra identifier le parcours que les données devront suivre, ajouter des multiplexeurs au besoin, et utiliser au minimum un nouveau bit de contrôle : \textit{write\_mem}.\\
+        \textbf{Note : } Pour l'instant, on ne traitera pas la partie \texttt{imm5} de ces instructions.}
+
+On a ajouté les bits de contrôle suivants :
+\begin{itemize}
+    \item \textit{mem\_access} qui vaut 1 lors des instructions \texttt{st} et \texttt{ld} (et 0 sinon) ;
+    \item \textit{read\_mem} qui vaut 1 lors de l'instruction \texttt{ld} (et 0 sinon) ;
+    \item \textit{write\_mem} qui vaut 1 lors de l'instruction \texttt{st} (et 0 sinon).
+\end{itemize}
+
+\hcf{ctrl_mem.png}{Bits de contrôle liés à la mémoire}
+
+        \subsubsection*{\textbf{4.2} Écrire un code assembleur qui récupère les touches saisies par l'utilisateur et les stocke en mémoire jusqu'à la saisie de la touche \textit{Entrée}, puis qui réécrit les données ainsi récupérées à l'écran en ordre inverse. \\
+        \textbf{Exemple : } La saisie de "123<\textit{Entrée}>" donnera donc lieu à l'affichage de "321".}
+
+\hcf{150.png}{Code assembleur.}
+        
+        \subsubsection*{\textbf{4.3} Modifer l'ALU afin d'avoir 3 nouvelles sorties, correspondant aux drapeaux S (signe), C (carry), et O (overflow).}
+
+Remarquons d'abord que \textit{Carry} et \textit{Overflow} sont confondus puisqu'avoir une retenue revient à dépasser la capacité de l'ALU donc par exemple seuls \textit{Carry} et \textit{Sign} sont à implémenter effectivement.
+
+\hcf{ALU_flags.png}{Ajout des drapeaux à l'ALU.}
+        
+        \subsubsection*{\textbf{4.4} Démontrer que, pour a et b deux entiers signés sur 8 bits différents, $a \leq b$ est équivalent à $S = O$, où $S$ et $O$ sont obtenus suite au calcul de $b-a$ par l'ALU.}
+        Soient $a$ et $b$ deux entiers signés sur 8 bits.
+        Alors :
+        $$
+        \exists (a_i)_{0\leq i \leq 7} \in \{0, 1\}^7 \, | \, a = \sum_{i=0}^7 2^i a_i
+        $$
+        $$
+        \exists (b_i)_{0\leq i \leq 7} \in \{0, 1\}^7 \, | \, b = \sum_{i=0}^7 2^i b_i
+        $$
+
+        Notons $S$ et $O$ les bits de Signe (\textit{Sign}) et de Retenue (\textit{Overflow}) renvoyés par l'ALU après le calcul de b-a.
+
+        Montrons que $a \leq b \iff S = O$ \\
+        \framebox[1cm][c]{\implies} Supposons que $a \leq b$.
+        \begin{itemize}
+            \item Comme $a \leq b$, $b-a \geq 0$ d'où \framebox[1.5cm][c]{$S = 0$}.
+            \item Comme $a \leq b$, il existe $k_0$ \in [\![ $0$ ; $7$ ]\!] \text{ tel que : }
+                \begin{itemize}
+                    \item $\forall i \in [\![k_0+1 ; 7]\!], a_i = b_i$ (I)
+                    \item $a_{k_0} = 0$ (II)
+                    \item $b_{k_0} = 1$ (III)
+                \end{itemize}
+                Par conséquent, $c := a-b = a + \overline{\text{xor}(b, 255)} + 1$ va vérifier :
+                \begin{itemize}
+                    \item $c_{k_0} = C_{k_0-1}$ en notant $C_i$ la retenue d'ordre $i \in [\![ $0$ ; $7$ ]\!]$ dans le calcul de $b-a$. \\
+                    \item \forall $i$ \in [\![$k_0+1$ ; $7$]\!], $c_i$ = 1
+                \end{itemize}
+                En effet, on a :
+                \begin{align*}
+                    c_{k_0} &= a_{k_0} - b_{k_0} + C_{k_0-1} 
+                    \\ &= a_{k_0} + \overline{b_{k_0}} + C_{k_0-1} 
+                    \\ &\overset{II \land III}{=} 0 + 0 + C_{k_0-1} 
+                    \\ c_{k_0} &= C_{k_0-1} \text{ et donc } C_{k_0} = 0
+                    \end{align*}
+                    \begin{align*}
+                    \forall i \in [\![k_0+1 ; 7]\!], c_i &= a_i + \overline{b_i} + C_i \
+                    \\ &\overset{I}{=} a_i + \overline{a_i} + 0 
+                    \\ c_i &= 1
+                    \end{align*}
+                Puisque que l'on n'a pas dépassé la limite de 8 bits, on a donc \framebox[1.5cm][c]{$O = 0$}.
+                
+        \end{itemize}
+        
+            Ainsi, on a $S = 0 = O$ et finalement \framebox[1.5cm][c]{$S = O$}. \\
+
+        \framebox[1cm][c]{\impliedby} Supposons que $S = O$. \\
+        Procédons par une disjonction de cas :
+        \begin{itemize}
+            \item Supposons que $S = 0$. \\
+            Par conséquent, d'après l'hypothèse, $O = 0$.
+            Donc : $b-a \geq 0$ sans avoir dépassé c'est-à-dire que \framebox[1.5cm][c]{$a \leq b$}.
+            \item Supposons que $S = 1$.
+            D'après l'hypothèse, on a $O = 1$ autrement dit $b-a \leq 0$ et a dépassé la capacité de l'ALU ce qui revient à dire que le signe est faussé et que $b-a \geq 0$ ou encore \framebox[1.5cm][c]{$a \leq b$}.
+        \end{itemize}
+        
+        
+        \subsubsection*{\textbf{4.5} Utiliser le résultat précédent et ce qui a déjà été à la section précédente pour ajouter le support des instructions \texttt{jlt}, \texttt{jle} et \texttt{jne}.}
+
+Le support de ces instructions a été ajouté à la question \textbf{3.4}.
+        
+        \subsubsection*{\textbf{4.6} Utiliser le code assembleur qui effectue à l'aide d'une boucle la multiplication par 10 de la valeur stockée dans \textit{r0}.\\
+        Comment peut-on faire ce calcul beaucoup plus efficacement ?}
+
+
+\hcf{150.png}{Code assembleur.}
+        
+        \subsubsection*{\textbf{4.7} Écrire un code assembleur qui récupère les touches saisies par l'utilisateur et les stocke en mémoire jusqu'à la saisie de la touche \textit{Entrée}, puis qui réécrit à l'écran les données ainsi récupérées mais en majuscules.\\
+        \textbf{Exemple : } La saisie de "Abc1<\textit{Entrée}>" donnera donc lieu à l'affichage de "ABC1".}
+
+
+                
+        \clearpage
+
+        \subsection{Exercice 5 - Améliorations diverses}
+
+Certaines questions de cet exercice impliquent de compléter le code source du compilateur.
+
+        \subsubsection*{\textbf{5.1} Améliorer l'ALU et modifier le chemin de données de façon à supporter les instructions logiques (catégorie \texttt{001}).}
+
+        J'ai ajouté à l'ALU le support de \texttt{mul / muli}, des opérations logiques telles que \texttt{not}, \texttt{lsr}, \texttt{or} et\texttt{and}.
+
+        Pour cela, j'ai décidé de changer les bits de contrôle en les faisant correspondre aux bits d'opération et de drapeaux de l'instruction et par conséquent, j'ai eu besoin d'un multiplexeur dans les cas où l'opération nécessite une somme ou une addition mais n'en est pas une à proprement parler.
+
+        On a donc :
+        \ttfamily
+        \begin{tabular}{|c|c|c|}
+             \hline
+             instruction & op & flags\\
+             \hline
+             not & $001$ & $00$\\
+             lsr & $001$ & $01$\\
+             or  & $001$ & $10$\\
+             and & $001$ & $11$\\
+             \hline
+             add / addi & $010$ & $0$X\\
+             sub / subi & $010$ &$1$X\\
+             \hline
+             mul / muli & $011$ & $0$X\\
+             \hline
+             jeq & $110$ & $00$\\
+             jle & $110$ & $01$\\
+             jlt & $110$ & $10$\\
+             jne & $110$ & $11$\\
+             \hline
+        \end{tabular}
+        
+        \subsubsection*{\textbf{5.2} Écrire un code qui lit un entier saisi au clavier.}
+
+\hcf{150.png}{Code assembleur.}
+         
+        \subsubsection*{\textbf{5.3} Écrire un code qui effectue la division par 10 de la valeur stockée dans r0.}
+
+\hcf{150.png}{Code assembleur.}
+        
+        \subsubsection*{\textbf{5.4} Écrire un code qui lit deux entiers au clavier, puis affiche le résultat de leur multiplication (modulo 256) à l'écran.}
+
+\hcf{150.png}{Code assembleur.}
+        
+        \subsubsection*{\textbf{5.5} Compléter le support des instructions \texttt{ld} et \texttt{st} afin de gérer la partie \texttt{imm5} de l'instruction.}
+
+\hcf{150.png}{Code assembleur.}
+        
+        \subsubsection*{\textbf{5.6} Ajouter le support de l'instruction \texttt{jr}.}
+
+
+
+    J'ai ajouté un bit de contrôle \textit{jr}.
+
+\hcf{jr.png}{Bit de contrôle \textit{jr}.}
+
+        J'ai également ajouté un bit de contrôle \textit{do\_jr}, l'arrivée du bit \textit{do\_jr} comme bit de contrôle au compteur de programme.
+
+        \hcf{do_jr.png}{Bit de contrôle \textit{do\_jr}.}
+
+        \hcf{clock_jr.png}{Ajout du bit de contrôle \textit{do\_jr} au compteur de programme.}
+
+        \newpage
+        
+\section{ALU (Arithmetic Logic Unit)}
+    \subsection{Bits de contrôle : }
+        \subsubsection{Zero}
+        \subsubsection{Carry / Overflow}
+        \subsubsection{Sign}
+
+\clearpage
+    
+\section{Bits de contrôle globaux}
+
+\begin{center}
+	\ttfamily
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		instr	& op & flags & zb & ma & mb & lg & mo \\
+		\hline
+		nop		& 000 & 00 & X & X & X & X & X \\
+		ldi		& 000 & 01 & X & X & X & X & X \\
+				& 000 & 10 & X & X & X & X & X \\
+				& 000 & 11 & X & X & X & X & X \\
+		\hline
+		not		& 001 & 00 & 1 & 1 & X & X & 0 \\
+		lsr		& 001 & 01 & 0 & 0 & 0 & 0 & 0 \\
+		or		& 001 & 10 & 0 & 1 & 1 & 1 & 1 \\
+		and		& 001 & 11 & 0 & 0 & 0 & 1 & 0 \\
+		\hline
+		addi	& 010 & 00 & 0 & 0 & 0 & 0 & 0 \\
+		add		& 010 & 01 & 0 & 0 & 0 & 0 & 0 \\
+		subi	& 010 & 10 & 0 & 1 & 0 & 0 & 1 \\
+		sub		& 010 & 11 & 0 & 1 & 0 & 0 & 1 \\
+		\hline
+		muli	& 011 & 00 & X & X & X & X & X \\
+		mul		& 011 & 01 & X & X & X & X & X \\
+		compi	& 011 & 10 & 0 & 1 & 0 & 0 & 1 \\
+		comp	& 011 & 11 & 0 & 1 & 0 & 0 & 1 \\
+		\hline
+		st		& 100 & 00 & 0 & 0 & 0 & 0 & 0 \\
+		ld		& 100 & 01 & 0 & 0 & 0 & 0 & 0 \\
+		out		& 100 & 10 & X & X & X & X & X \\
+		in		& 100 & 11 & X & X & X & X & X \\
+		\hline
+		jr		& 101 & 00 & X & X & X & X & X \\
+				& 101 & 01 & X & X & X & X & X \\
+				& 101 & 10 & X & X & X & X & X \\
+				& 101 & 11 & X & X & X & X & X \\
+		\hline
+		jeq		& 110 & 00 & 0 & 1 & 0 & 0 & 1 \\
+		jle		& 110 & 01 & 0 & 1 & 0 & 0 & 1 \\
+		jlt		& 110 & 10 & 0 & 1 & 0 & 0 & 1 \\
+		jne		& 110 & 11 & 0 & 1 & 0 & 0 & 1 \\
+		\hline
+		jmp		& 111 & 00 & X & X & X & X & X \\
+		jmp		& 111 & 01 & X & X & X & X & X \\
+		jmp		& 111 & 10 & X & X & X & X & X \\
+		jmp		& 111 & 11 & X & X & X & X & X \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\clearpage
+
+\section{Autres bits de contrôles}
+
+\clearpage
+
+\section{Changements apportés au compilateur}
+
+\clearpage
+
+\section{Codes de tests}
+
+\clearpage
+
+\section*{Conclusion}
+
+\end{document}
