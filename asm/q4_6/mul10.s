@@ -10,5 +10,4 @@ loop:	add r4, r1, r0 # r4 <- r1+r0
 	jeq r3, r2, end # if (r3 == r2) goto end
 	jmp loop # goto loop
 
-		out r4 # putchar() <- r4
 end:    jmp end # goto end
