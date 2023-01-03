@@ -15,8 +15,7 @@ loop:	in r7 # r7 <- getchar()
 eol:	out r3 # putchar() <- r3
 	ldi r3, 0
 	
-loop2:	out r7 # putchar() <- r7
-	subi r1, r0, 1 # r1 <- r0-1
+loop2: subi r1, r0, 1 # r1 <- r0-1
 	add r6, r5, r1 # r6 <- r5+r1
 	ld r7, r6, 0 # r7 <- MEM[r6+0]
 	out r7 # putchar() <- r7
