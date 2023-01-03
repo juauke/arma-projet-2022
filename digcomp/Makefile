@@ -34,6 +34,14 @@ $(BIN): $(OBJS)
 .mli.cmi:
 	$(OCAMLC) $(OCAMLFLAGS) -c $< -o $@
 
+make_patch: $(BIN)
+	cp digcomp ../patch/digcomp_new
+	diff -urN ../patch/digcomp_orig ../patch/digcomp_new > ../patch/digcomp_jb.patch
+
+patch: make_patch
+	patch -s -p0 < ../patch/digcomp_jb.patch
+
+.PHONY: clean distclean
 
 clean:
 	@rm -vf *.cm[io] *~ .*~ parser.ml parser.mli lexer.ml lexer.mli
