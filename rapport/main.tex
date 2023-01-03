@@ -32,9 +32,9 @@
 \usepackage{enumitem}
 
 % #2 scale centered figure
-% usage: \hcf{figure}{scale}{caption}
+% usage: \hcf{path_to_figure}{scale}{caption}
 \newcommand{\cf}[3]{
-    \begin{figure}[!hbt]
+    \begin{figure}[!h]
         \centering
         \includegraphics[scale=#2]{#1}
     \caption{#3}\label{Fig:#1}
@@ -42,12 +42,48 @@
 }
 
 % 3/4 scale centered figure
-% usage: \hcf{figure}{caption}
+% usage: \hcf{path_to_figure}{caption}
 \newcommand{\hcf}[2]{\cf{#1}{.75}{#2}}
 
 % 1/2 scale centered figure
-% usage: \qcf{figure}{caption}
+% usage: \qcf{path_to_figure}{caption}
 \newcommand{\qcf}[2]{\cf{#1}{.5}{#2}}
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\setminted{bgcolor=bg, linenos, fontsize=\scriptsize}
+
+% include asm code with minted as a figure
+% usage: \fmnt{path_to_code}{caption}
+\newcommand{\fmnt}[2]{
+\begin{figure}[!h]
+    \centering
+    \inputminted[]{asm}{#1}
+    \caption{#2}
+    \label{fig:#2}
+\end{figure}
+}
+
+% include asm code with minted as a figure
+% usage: \fm{path_to_code}{caption (will be in \texttt)}
+\newcommand{\fm}[2]{
+\begin{figure}[!h]
+    \centering
+    \inputminted[]{asm}{#1}
+    \caption{\texttt{#2}}
+    %\label{fig:#2}
+\end{figure}
+}
+
+% include ocamlc code with minted as a figure
+% usage: \fmo{path_to_code}{caption (will be in \texttt)}
+\newcommand{\fmo}[4]{
+\begin{figure}[!h]
+    \centering
+    \inputminted[firstline=#3, lastline=#4]{ocaml}{#1}
+    \caption{\texttt{#2}}
+    %\label{fig:#2}
+\end{figure}
+}
 
 % color like links but aren't real ones: false links
 \newcommand{\fl}[1]{\textcolor{blue}{\underline{#1}}}
@@ -56,8 +92,10 @@
 
 \shorthandoff{:}
 
+% Two figures
+% usage: \tf{path_to_fig1}{fig1_caption}{path_to_fig2}{fig2_caption}
 \newcommand{\tf}[4]{
-\begin{figure}[!htb]
+\begin{figure}[!h]
    \begin{minipage}{0.48\textwidth}
      \centering
      \includegraphics[width=\linewidth]{#1}
@@ -67,6 +105,25 @@
      \centering
      \includegraphics[width=\linewidth]{#3}
      \caption{#4}
+   \end{minipage}
+\end{figure}
+}
+
+% Two minted figures
+% usage: \tmf{path_to_code1}{code1_caption}{path_to_code2}{code2_caption}
+\newcommand{\tmf}[4]{
+\begin{figure}[!h]
+   \begin{minipage}{0.5\textwidth}
+     \centering
+     \inputminted[]{asm}{#1}
+     \caption{\texttt{#2}}
+     \label{fig:#2}
+   \end{minipage}\hfill
+   \begin{minipage}{0.46\textwidth}
+     \centering    
+     \inputminted[]{asm}{#3}
+     \caption{\texttt{#4}}
+     \label{fig:#4}
    \end{minipage}
 \end{figure}
 }
@@ -101,6 +158,37 @@
 
 \section*{Introduction}
 
+L’objectif de ce projet était de réaliser un mini-processeur à partir d'un squelette. Pour ce faire, nous devions
+nous appuyer sur le jeu d’instructions d’un processeur MIPS, que nous avons implémenté dans
+le logiciel Diglog\ldots
+
+Les instructions qui ont été implémentées sont :
+{
+\ttfamily
+\begin{itemize}
+    \item nop
+    \item ldi
+    \item not
+    \item lsr
+    \item or
+    \item and
+    \item addi
+    \item add
+    \item subi
+    \item sub
+    \item muli
+    \item st
+    \item ld
+    \item out
+    \item in
+    \item jr
+    \item jeq
+    \item jle
+    \item jlt
+    \item jne
+    \item jmp
+\end{itemize}
+}
 \newpage
 
 \tableofcontents
@@ -117,14 +205,7 @@ Le but de cet exercice est d’ajouter le support des sauts inconditionnels, afi
 l’exécution du programme suivant :
 }
 
-{
-\color{gray}
-\begin{verbatim}
-        ldi r1, 42
-        addi r0, r1, 17
-    end: jmp end
-\end{verbatim}
-}
+\inputminted[fontsize=\normal, bgcolor=white]{asm}{../asm/ex1/addi.s}
     
         \subsubsection*{\textbf{1.1} Donner la valeur de chaque registre à la fin de l’exécution de ce programme.}
 
@@ -156,7 +237,20 @@ A la fin de l'exécution de ce programme, on a :
 
     \hcf{compil_addi.png}{Compilation du programme cité ci-dessus avec Digcomp.}
 
-    \tf{addi_hi.png}{Résultat renvoyé pour le \texttt{.hi}}{addi_lo.png}{Résultat renvoyé pour le \texttt{.lo}}
+\begin{figure}[!h]
+   \begin{minipage}{0.48\textwidth}
+     \centering
+     \inputminted[]{text}{../asm/ex1/addi.s.hi}
+     \caption{\texttt{addi.s.hi}}
+     \label{fig:addi.s.hi}
+   \end{minipage}\hfill
+   \begin{minipage}{0.48\textwidth}
+     \centering    
+     \inputminted[]{text}{../asm/ex1/addi.s.lo}
+     \caption{\texttt{addi.s.lo}}
+     \label{fig:addi.s.lo}
+   \end{minipage}
+\end{figure}
 
     Etant donné que la partie \texttt{.hi} contient les 8 premiers bits de la ligne et que la partie \texttt{.lo} contient les 8 derniers, on a (en traduisant les résultats hexadécimaux précédents en binaire) :
     \begin{center}
@@ -207,18 +301,23 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
              \texttt{jmp}  & 1 & 0 & X & X & 0\\
              \hline
         \end{tabular}
+
+\clearpage
         
         \subsubsection*{\textbf{1.8} Modifier le processeur afin de gérer l'instruction de saut \texttt{jmp}. Utiliser pour cela le bit de contrôle \textit{do\_jmp\_abs (le bit \textit{do\_jcc} servira plus tard pour les sauts conditionnels)}.}
 
         \hcf{do_jmp_abs.png}{Bit de contrôle \textit{do\_jmp\_abs}.}
-        J'ai ajouté le bit de contrôle \texttt{do\_jmp\_abs}.
-
-        \hcf{is_jmp.png}{Bit de contrôle \textit{is\_jmp} (seule la partie absolue importe pour l'instant).}
-        J'ai également ajouté le bit de contrôle \textit{is\_jmp}.
         
-        J'ai aussi ajouté l'arrivée de ce bit de contrôle comme bit de contrôle du compteur de programme.
+        J'ai ajouté le bit de contrôle \texttt{do\_jmp\_abs} qui vaut 1 si et seulement si l'instruction courante est \texttt{jmp} c'est-à-dire que \framebox[2cm][c]{op $= 111$}
 
         \hcf{clock_abs.png}{Ajout du bit de contrôle \textit{do\_jmp\_abs} au compteur de programme.}
+
+        J'ai aussi ajouté l'arrivée de ce bit de contrôle comme bit de contrôle du compteur de programme.
+
+        \hcf{is_jmp.png}{Bit de contrôle \textit{is\_jmp} (seule la partie absolue importe pour l'instant).}
+        
+        J'ai également ajouté le bit de contrôle \textit{is\_jmp} qui vaut 1 lorsque l'instruction est un saut et que \textit{reset} est à 0.
+
 
 \newpage
 
@@ -228,19 +327,25 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
 
     Les instructions suivantes ont besoin de l'ALU en tant que soustracteur :
     \begin{itemize}[nosep]
-        \item les instructions de soustraction : \texttt{subi}, \texttt{sub}
-        \item les instructions de lecture en RAM : \texttt{st}, \texttt{ld} ;
-        \item les sauts conditionnels : \texttt{jeq}, \texttt{jle}, \texttt{jlt}, \texttt{jne}.
+        \item les instructions de soustraction : \texttt{subi} et \texttt{sub} ;
+        \item les instructions de lecture en RAM : \texttt{st} et \texttt{ld} ;
+        \item les sauts conditionnels : \texttt{jeq}, \texttt{jle}, \texttt{jlt} et \texttt{jne}.
     \end{itemize}\vspace*{-\baselineskip}
 
         \subsubsection*{\textbf{2.2} Modifier le processeur afin d'obtenir la bonne valeur pour le bit de contrôle \textit{do\_sub}. Vérifier que le processeur gère désormais aussi l'instruction \texttt{subi}.}
 
     \hcf{do_sub.png}{Bit de contrôle \textit{do\_sub}}
     Le processeur gère bien l'instruction \texttt{subi}.
+
+\clearpage
         
         \subsubsection*{\textbf{2.3} Modifier le banc de registre afin de pouvoir lire les valeurs de deux registres (pas forcément différents) à chaque cycle.}
 
     \hcf{mod_reg8.png}{Ajout de la seconde rangée de multiplexeurs sur \texttt{reg8} pour lire la valeur d'un deuxième registre}
+
+    La seconde rangée de multiplexeurs a été ajoutée pour permettre la lecture de la valeur d'un deuxième registre dont l'indice est la nombre binaire formée par les bits 3 à 5 (correspondant à \textit{\#read2}) de l'entrée.
+
+\clearpage
 
         \subsubsection*{\textbf{2.4} Pour chaque instruction, déterminer le nombre de lectures de registres à effectuer, ainsi que les bits contenant les numéros de registres à lire.}
 
@@ -288,7 +393,7 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
 
 Les instructions \texttt{add} et \texttt{sub} sont désormais supportées.
 
-\tf{test_add.png}{Test de l'instruction \texttt{add}.}{test_sub.png}{Test de l'instruction \texttt{sub}.}
+%\fmnt{../asm/q2_5/add_sub.s}{Test des instructions \texttt{add} et \texttt{sub}.}
 
 Les bits de contrôle n'ont pas dû être changés (car on avait déjà prévu les cas correspondant à ces deux instructions).
         
@@ -313,6 +418,12 @@ récupérer une touche saisie au clavier (fils \textit{kb0} à \textit{kb7}) à 
 
 \hcf{in_out.png}{Gestion des bits de contrôle \texttt{in} et \texttt{out}.}
 
+Le bit de contrôle \texttt{out} est actif lorsque lorsque l'instruction courante est \texttt{out} c'est-à-dire que
+\framebox[2cm][c]{op $= 100$} et \framebox[2.25cm][c]{flags $= 10$}.
+
+Le bit de contrôle \texttt{in} est actif lorsque lorsque l'instruction courante est \texttt{in} c'est-à-dire que
+\framebox[2cm][c]{op $= 100$} et \framebox[2.25cm][c]{flags $= 11$}.
+
         \subsubsection*{\textbf{3.2} Tester le clavier et l'écran. Que se passe-t-il si on récupère les données du clavier alors qu'aucune touche n'a été frappée ? Et si de nombreuses touches ont été frappées depuis la dernière récupération de touche ?}
 
 Si l'on récupère les données du clavier alors qu'aucune touche n'a été frappée, on obtient $255$ ($0b11111111$).
@@ -328,15 +439,19 @@ On a ajouté un bit \texttt{Zero} qui permet de savoir si la valeur en sortie de
         \subsubsection*{\textbf{3.4} Afin de gérer les instructions de saut conditionnel, nous allons utiliser le bit de contrôle \textit{do\_jcc}, qui vaudra 1 si et seulement si l'instruction courante est de type saut conditionnel et qu'il convient d'effectuer le saut en question. \\
         Faire en sorte que ce bit de contrôle reçoive la bonne valeur lors de l'exécution d'un \texttt{jeq}.}
 
-J'ai décidé de renommer le bit de contrôle en \textit{do\_jmp\_cnd} (car j'utilise \textit{do\_jcc} quand je fais effectivement [la condition est également vérifiée] le saut conditionnel).
+J'ai décidé de renommer le bit de contrôle en \textit{do\_jmp\_cnd} (car j'utilise \textit{do\_jcc} quand je fais effectivement le saut conditionnel [la condition est alors également vérifiée et que l'on est pas en \textit{reset}]).
 
 \hcf{do_jmp_cnd.png}{Bit de contrôle \textit{do\_jmp\_cnd}}
+
+Ce bit de contrôle vaut 1 si et seulement si l'instruction courante est un saut conditionnel c'est-à-dire que \framebox[2cm][c]{op $= 110$}.
 
         \subsubsection*{\textbf{3.5} Modifier le processeur afin de mettre correctement à jour le pointeur d'instruction PC lors de l'exécution d'une instruction \texttt{jeq}.}
 
         En plus de l'ajout de la question précédente, on a ajouté un bit de contrôle \textit{do\_jcc}, l'arrivée du bit \textit{do\_jcc} comme bit de contrôle au compteur de programme.
 
         \hcf{do_jcc.png}{Bit de contrôle \textit{do\_jcc}.}
+
+        Ce bit de contrôle vaut 1 lorsque au moins une (une seule à la fois normalement) des instructions de sauts conditionnels est active et que la condition associée est vérifiée.
 
         \hcf{clock_jcc.png}{Ajout du bit de contrôle \textit{do\_jcc} au compteur de programme.}
 
@@ -346,16 +461,23 @@ J'ai décidé de renommer le bit de contrôle en \textit{do\_jmp\_cnd} (car j'ut
             \item en arrière (vers une adresse plus petite que la valeur courante dans PC).
         \end{enumerate}}
 
-Les deux codes suivants fonctionnent à présent.
-\tf{past_jp.png}{Code de test du saut dans le passé.}{future_jp.png}{Code de test du saut dans le futur.}
+%\tmf{../asm/q3_6/past_jump.s}{../asm/q3\_6/past\_jump.s}{../asm/q3_6/future_jump.s}{../asm/q3\_6/future\_jump.s}
         
+Le premier code (correspondant à un saut dans le passé) et le second (correspondant à un saut dans le futur) fonctionnent à présent.
+
         \subsubsection*{\textbf{3.7} Écrire un code assembleur qui récupère les touches réellement saisies par l'utilisateur, les affichent, et s'arrête dès que l'utilisateur a appuyé sur la touche \textit{Entrée} (\textit{Cr}, de code ASCII 13).}
 
-\hcf{150.png}{Code assembleur.}
+\fm{../asm/q3_7/char_read.s}{../asm/q3\_7/char\_read.s}
+
+Le programme \texttt{char\_read.s} lit les caractères entrés par l'utilisateur et boucle jusqu'à que l'utilisateur appuie sur la touche \textit{Entrée} du clavier.
+
+\clearpage
 
         \subsubsection*{\textbf{3.8} Écrire un code assembleur qui récupère un entier $n \in [1, 9]$ et un caractère \textit{c}, puis qui affiche à l'écran un carré de taille $n$ et composé de caractères \textit{c}.}
 
-\hcf{150.png}{Code assembleur.}
+\fm{../asm/q3_8/char_square.s}{../asm/q3\_8/char\_square.s}
+
+Après saisie d'un chiffre non nul n et d'un caractère c par l'utilisateur, le programme \texttt{s.s} affiche un carré de c de côté de longueur n. 
         
         \newpage
 
@@ -364,25 +486,45 @@ Les deux codes suivants fonctionnent à présent.
         \subsubsection*{\textbf{4.1} Ajouter le support des instructions \texttt{ld} et \texttt{st}. Pour cela, il faudra identifier le parcours que les données devront suivre, ajouter des multiplexeurs au besoin, et utiliser au minimum un nouveau bit de contrôle : \textit{write\_mem}.\\
         \textbf{Note : } Pour l'instant, on ne traitera pas la partie \texttt{imm5} de ces instructions.}
 
+\hcf{ctrl_mem.png}{Bits de contrôle liés à la mémoire}
+
 On a ajouté les bits de contrôle suivants :
 \begin{itemize}
-    \item \textit{mem\_access} qui vaut 1 lors des instructions \texttt{st} et \texttt{ld} (et 0 sinon) ;
-    \item \textit{read\_mem} qui vaut 1 lors de l'instruction \texttt{ld} (et 0 sinon) ;
-    \item \textit{write\_mem} qui vaut 1 lors de l'instruction \texttt{st} (et 0 sinon).
+    \item \textit{mem\_access} qui vaut 1 lors des instructions \texttt{st} et \texttt{ld} (et 0 sinon) c'est-à-dire lorsque \\ op $= 100$ ;
+    \item \textit{read\_mem} qui vaut 1 lors de l'instruction \texttt{ld} (et 0 sinon) c'est-à-dire que la première condition est vérifiée et flags $= 01$ ;
+    \item \textit{write\_mem} qui vaut 1 lors de l'instruction \texttt{st} (et 0 sinon) c'est-à-dire que la première condition est vérifiée et flags $= 00$.
 \end{itemize}
 
-\hcf{ctrl_mem.png}{Bits de contrôle liés à la mémoire}
+\clearpage
+
+On a ajouté les multiplexeurs suivants :
+\hcf{ram.png}{RAM après les modifications.}
+
+\tf{mux-mem_access.png}{Multiplexeur qui permet de décaler négativement l'adresse en mémoire.}{mux-read_mem.png}{Multiplexeur qui permet de lire en mémoire lors d'un \texttt{rd}.}
+
+\clearpage
 
         \subsubsection*{\textbf{4.2} Écrire un code assembleur qui récupère les touches saisies par l'utilisateur et les stocke en mémoire jusqu'à la saisie de la touche \textit{Entrée}, puis qui réécrit les données ainsi récupérées à l'écran en ordre inverse. \\
         \textbf{Exemple : } La saisie de "123<\textit{Entrée}>" donnera donc lieu à l'affichage de "321".}
 
-\hcf{150.png}{Code assembleur.}
-        
+\fm{../asm/q4_2/reverse_int.s}{reverse\_int.s}
+
+Les lignes 6 à 23 affichent 'Entier ? ' à l'écran.
+
+Dans la boucle, on commence par récupérer le caractère entrée par l'utilisateur dans \texttt{r7}, si c'est '<Entrée>', on va à la fin.
+Sinon, on vérifie que ce dernier est un chiffre (entre 0 et 9) : si c'est le cas, on continue et on convertit sa valeur en décimal.
+Sinon, on boucle.
+On affiche les chiffres dans l'ordre inverse en lisant de 0 à la taille de la chaîne entrée.
+
+\clearpage
+      
         \subsubsection*{\textbf{4.3} Modifer l'ALU afin d'avoir 3 nouvelles sorties, correspondant aux drapeaux S (signe), C (carry), et O (overflow).}
 
-Remarquons d'abord que \textit{Carry} et \textit{Overflow} sont confondus puisqu'avoir une retenue revient à dépasser la capacité de l'ALU donc par exemple seuls \textit{Carry} et \textit{Sign} sont à implémenter effectivement.
+Remarquons d'abord que \textit{Carry} et \textit{Overflow} sont confondus puisque avoir une retenue revient à dépasser la capacité de l'ALU donc par exemple seuls \textit{Carry} et \textit{Sign} sont à implémenter effectivement.
 
-\hcf{ALU_flags.png}{Ajout des drapeaux à l'ALU.}
+\qcf{ALU_flags.png}{Ajout des drapeaux à l'ALU.}
+
+\clearpage
         
         \subsubsection*{\textbf{4.4} Démontrer que, pour a et b deux entiers signés sur 8 bits différents, $a \leq b$ est équivalent à $S = O$, où $S$ et $O$ sont obtenus suite au calcul de $b-a$ par l'ALU.}
         Soient $a$ et $b$ deux entiers signés sur 8 bits.
@@ -394,66 +536,73 @@ Remarquons d'abord que \textit{Carry} et \textit{Overflow} sont confondus puisqu
         \exists (b_i)_{0\leq i \leq 7} \in \{0, 1\}^7 \, | \, b = \sum_{i=0}^7 2^i b_i
         $$
 
-        Notons $S$ et $O$ les bits de Signe (\textit{Sign}) et de Retenue (\textit{Overflow}) renvoyés par l'ALU après le calcul de b-a.
+        Notons $S$ et $O$ les bits de Signe (\textit{Sign}) et de Retenue (\textit{Overflow}) renvoyés par l'ALU après le calcul de $b-a$.
 
-        Montrons que $a \leq b \iff S = O$ \\
-        \framebox[1cm][c]{\implies} Supposons que $a \leq b$.
-        \begin{itemize}
-            \item Comme $a \leq b$, $b-a \geq 0$ d'où \framebox[1.5cm][c]{$S = 0$}.
-            \item Comme $a \leq b$, il existe $k_0$ \in [\![ $0$ ; $7$ ]\!] \text{ tel que : }
-                \begin{itemize}
-                    \item $\forall i \in [\![k_0+1 ; 7]\!], a_i = b_i$ (I)
-                    \item $a_{k_0} = 0$ (II)
-                    \item $b_{k_0} = 1$ (III)
-                \end{itemize}
+        Notons également $C_i$ la retenue dans le calcul de $b-a$ d'ordre $i$ \in [\![ 0 ; 7 ]\!]. \\
+
+        \hspace{-\baselineskip}Montrons que $a \leq b \iff S = O$ \\
+        \framebox[1cm][c]{$\implies$} Supposons que $a \leq b$. \\
+            Comme $a \leq b$, $b-a \geq 0$ d'où \framebox[1.5cm][c]{$S = 0$}. \\
+            Comme $a \leq b$, il existe \[ k_0 \in [\![ 0 ; 7 ]\!] \] tel que : 
+                \begin{equation}
+                    \forall i \in [\![k_0+1 ; 7]\!], a_i = b_i
+                \end{equation}
+                \begin{equation}
+                    a_{k_0} = 0
+                \end{equation}
+                \begin{equation}
+                    b_{k_0} = 1
+                \end{equation}
                 Par conséquent, $c := a-b = a + \overline{\text{xor}(b, 255)} + 1$ va vérifier :
-                \begin{itemize}
-                    \item $c_{k_0} = C_{k_0-1}$ en notant $C_i$ la retenue d'ordre $i \in [\![ $0$ ; $7$ ]\!]$ dans le calcul de $b-a$. \\
-                    \item \forall $i$ \in [\![$k_0+1$ ; $7$]\!], $c_i$ = 1
-                \end{itemize}
+                \begin{equation*}
+                    c_{k_0} = C_{k_0-1}
+                \end{equation*}
+                \begin{equation*}
+                    \forall i \in [\![k_0+1 ; 7]\!], c_i = 1
+                \end{equation*}
                 En effet, on a :
                 \begin{align*}
                     c_{k_0} &= a_{k_0} - b_{k_0} + C_{k_0-1} 
                     \\ &= a_{k_0} + \overline{b_{k_0}} + C_{k_0-1} 
-                    \\ &\overset{II \land III}{=} 0 + 0 + C_{k_0-1} 
+                    \\ &\overset{(2) \land (3)}{=} 0 + 0 + C_{k_0-1} 
                     \\ c_{k_0} &= C_{k_0-1} \text{ et donc } C_{k_0} = 0
                     \end{align*}
                     \begin{align*}
                     \forall i \in [\![k_0+1 ; 7]\!], c_i &= a_i + \overline{b_i} + C_i \
-                    \\ &\overset{I}{=} a_i + \overline{a_i} + 0 
+                    \\ &\overset{(1)}{=} a_i + \overline{a_i} + 0 
                     \\ c_i &= 1
                     \end{align*}
-                Puisque que l'on n'a pas dépassé la limite de 8 bits, on a donc \framebox[1.5cm][c]{$O = 0$}.
-                
-        \end{itemize}
-        
+                Puisque que l'on n'a pas dépassé la limite de 8 bits, on a donc \framebox[1.5cm][c]{$O = 0$}. \\     
             Ainsi, on a $S = 0 = O$ et finalement \framebox[1.5cm][c]{$S = O$}. \\
 
-        \framebox[1cm][c]{\impliedby} Supposons que $S = O$. \\
+        \framebox[1cm][c]{$\impliedby$} Supposons que $S = O$. \\
         Procédons par une disjonction de cas :
         \begin{itemize}
             \item Supposons que $S = 0$. \\
             Par conséquent, d'après l'hypothèse, $O = 0$.
             Donc : $b-a \geq 0$ sans avoir dépassé c'est-à-dire que \framebox[1.5cm][c]{$a \leq b$}.
             \item Supposons que $S = 1$.
-            D'après l'hypothèse, on a $O = 1$ autrement dit $b-a \leq 0$ et a dépassé la capacité de l'ALU ce qui revient à dire que le signe est faussé et que $b-a \geq 0$ ou encore \framebox[1.5cm][c]{$a \leq b$}.
+            D'après l'hypothèse, on a $O = 1$ autrement dit $b-a \leq 0$ et le calcul a dépassé la capacité de l'ALU ce qui revient à dire que le signe est faussé et que $b-a \geq 0$ ou encore \framebox[1.5cm][c]{$a \leq b$}.
         \end{itemize}
-        
-        
+                
         \subsubsection*{\textbf{4.5} Utiliser le résultat précédent et ce qui a déjà été à la section précédente pour ajouter le support des instructions \texttt{jlt}, \texttt{jle} et \texttt{jne}.}
 
 Le support de ces instructions a été ajouté à la question \textbf{3.4}.
         
-        \subsubsection*{\textbf{4.6} Utiliser le code assembleur qui effectue à l'aide d'une boucle la multiplication par 10 de la valeur stockée dans \textit{r0}.\\
+        \subsubsection*{\textbf{4.6} Écrire un code assembleur qui effectue à l'aide d'une boucle la multiplication par 10 de la valeur stockée dans \textit{r0}.\\
         Comment peut-on faire ce calcul beaucoup plus efficacement ?}
 
 
-\hcf{150.png}{Code assembleur.}
+\fm{../asm/q4_6/mul10.s}{../asm/q4\_6/mul10.s}
+
+Pour réaliser le calcul beaucoup plus efficacement, on peut implémenter la multiplication et utiliser l'instruction "\texttt{muli r1, r0, 10}" et récupérer la valeur de \texttt{r1}.
+
+\clearpage
         
         \subsubsection*{\textbf{4.7} Écrire un code assembleur qui récupère les touches saisies par l'utilisateur et les stocke en mémoire jusqu'à la saisie de la touche \textit{Entrée}, puis qui réécrit à l'écran les données ainsi récupérées mais en majuscules.\\
         \textbf{Exemple : } La saisie de "Abc1<\textit{Entrée}>" donnera donc lieu à l'affichage de "ABC1".}
 
-
+\fm{../asm/q4_7/char_to_caps.s}{../asm/q4\_7/char\_to\_caps.s}
                 
         \clearpage
 
@@ -463,11 +612,13 @@ Certaines questions de cet exercice impliquent de compléter le code source du c
 
         \subsubsection*{\textbf{5.1} Améliorer l'ALU et modifier le chemin de données de façon à supporter les instructions logiques (catégorie \texttt{001}).}
 
-        J'ai ajouté à l'ALU le support de \texttt{mul / muli}, des opérations logiques telles que \texttt{not}, \texttt{lsr}, \texttt{or} et\texttt{and}.
+        J'ai ajouté à l'ALU le support de \texttt{mul / muli}, des opérations logiques telles que \texttt{not}, \texttt{lsr}, \texttt{or} et \texttt{and}.
 
         Pour cela, j'ai décidé de changer les bits de contrôle en les faisant correspondre aux bits d'opération et de drapeaux de l'instruction et par conséquent, j'ai eu besoin d'un multiplexeur dans les cas où l'opération nécessite une somme ou une addition mais n'en est pas une à proprement parler.
 
         On a donc :
+        \begin{center}
+            
         \ttfamily
         \begin{tabular}{|c|c|c|}
              \hline
@@ -489,32 +640,84 @@ Certaines questions de cet exercice impliquent de compléter le code source du c
              jne & $110$ & $11$\\
              \hline
         \end{tabular}
+
+        \end{center}
         
         \subsubsection*{\textbf{5.2} Écrire un code qui lit un entier saisi au clavier.}
 
-\hcf{150.png}{Code assembleur.}
+\fm{../asm/q5_2/int_read.s}{../asm/q5\_2/int\_read.s}
+
+On lit le caractère écrit par l'utilisateur au clavier dans \texttt{r7}, on le renvoie et on arrive à la fin si c'est un entier sinon on boucle jusqu'à que l'utilisateur entre un entier.
          
         \subsubsection*{\textbf{5.3} Écrire un code qui effectue la division par 10 de la valeur stockée dans r0.}
 
-\hcf{150.png}{Code assembleur.}
-        
+\fm{../asm/q5_3/div10.s}{../asm/q5\_3/div10.s}
+
+On commence par diviser par 2 la valeur contenue dans \texttt{r0}. Puis, on enlève 5 jusqu'à obtenir un résultat inférieur strictement à 5 (quitte à le faire 0 fois). Et le nombre de soustractions effectuées correspond au quotient de \texttt{r0} par 10.
+
         \subsubsection*{\textbf{5.4} Écrire un code qui lit deux entiers au clavier, puis affiche le résultat de leur multiplication (modulo 256) à l'écran.}
 
-\hcf{150.png}{Code assembleur.}
+\fm{../asm/q5_4/read2_mul.s}{../asm/q5\_4/read2\_mul.s}
+
+\clearpage
         
         \subsubsection*{\textbf{5.5} Compléter le support des instructions \texttt{ld} et \texttt{st} afin de gérer la partie \texttt{imm5} de l'instruction.}
 
-\hcf{150.png}{Code assembleur.}
-        
+\fmo{../patch/digcomp_jb.patch.dbu}{instr 1}{14}{15}
+
+Suppression des anciennes instructions \texttt{ld} et \texttt{st} du type \textit{instr} de \texttt{asm.ml}.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{instr 2}{18}{19}
+
+Ajout des nouvelles instructions (supportant les \texttt{imm5}) \texttt{ld} et \texttt{st} au type \textit{instr} de \texttt{asm.ml}.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{dump\_instr 1}{40}{43}
+
+Suppression de l'ancien \textit{dump} de \texttt{ld} et \texttt{st}.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{dump\_instr 2}{48}{51}
+
+Ajout du nouveau \textit{dump} de \texttt{ld} et \texttt{st}.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{op 1}{78}{81}
+
+Suppression des anciennes opérations \texttt{ld} et \texttt{st} dans \textit{op}. 
+
+\fmo{../patch/digcomp_jb.patch.dbu}{op 2}{86}{95}
+
+Ajout des nouvelles opérations \texttt{ld} et \texttt{st} dans \textit{op}.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{asm.mli 1}{118}{119}
+
+Suppression des anciennes déclarations \texttt{ld} et \texttt{st} dans le type de \textit{asm.mli}.. 
+
+\fmo{../patch/digcomp_jb.patch.dbu}{asm.mli 2}{122}{123}
+
+Ajout des nouvelles déclarations \texttt{ld} et \texttt{st} dans le type de \textit{asm.mli}.. 
+
+\fmo{../patch/digcomp_jb.patch.dbu}{parser.mly 1}{194}{194}
+
+Suppression de l'ancienne syntaxe de \texttt{ld} dans \texttt{parser.mly}.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{parser.mly 2}{196}{196}
+
+Suppression de l'ancienne syntaxe de \texttt{st} dans \texttt{parser.mly}.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{parser.mly 3}{200}{200}
+
+Ajout de la nouvelle syntaxe de \texttt{ld} dans \texttt{parser.mly}.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{parser.mly 4}{202}{202}
+
+Ajout de la nouvelle syntaxe de \texttt{st} dans \texttt{parser.mly}.
+
         \subsubsection*{\textbf{5.6} Ajouter le support de l'instruction \texttt{jr}.}
 
-
-
-    J'ai ajouté un bit de contrôle \textit{jr}.
-
-\hcf{jr.png}{Bit de contrôle \textit{jr}.}
-
-        J'ai également ajouté un bit de contrôle \textit{do\_jr}, l'arrivée du bit \textit{do\_jr} comme bit de contrôle au compteur de programme.
+        J'ai ajouté un bit de contrôle \textit{do\_jr} et l'arrivée de ce dernier comme bit de contrôle au compteur de programme.
 
         \hcf{do_jr.png}{Bit de contrôle \textit{do\_jr}.}
 
@@ -523,78 +726,490 @@ Certaines questions de cet exercice impliquent de compléter le code source du c
         \newpage
         
 \section{ALU (Arithmetic Logic Unit)}
-    \subsection{Bits de contrôle : }
-        \subsubsection{Zero}
-        \subsubsection{Carry / Overflow}
-        \subsubsection{Sign}
 
+    \hcf{ALU.png}{L'unité arithmétique et logique.}
+
+    \subsection{Bits de contrôle}
+
+    \hcf{ctrl_ALU.png}{Bits de contrôle de l'ALU}
+    
+        \subsubsection{op (3 bits : \textit{op2}, \textit{op1} et \textit{op0})}
+        Ces 3 bits de contrôle correspondent aux 3 bits d'opération de l'instruction sauf dans le cas des sauts conditionnels (où l'on force une soustraction) ou de l'accès en mémoire (où l'on force une addition ou une soustraction en fonction du décalage).
+        
+        \subsubsection{flags (2 bits : \textit{f1} et \textit{f0})}
+        Ces 2 bits de contrôle correspondent aux 2 bits de drapeaux de l'instruction sauf dans le cas des sauts conditionnels (où l'on force une soustraction) ou de l'accès en mémoire (où l'on force une addition ou une soustraction en fonction du décalage).
+        
+    \subsection{Bits de sortie}
+
+    \hcf{out_ALU.png}{Bits de sortie de l'ALU}
+    
+        \subsubsection{Zero}
+        Ce bit de sortie vaut 1 si et seulement si la sortie de l'ALU vaut 0.
+
+        \subsubsection{Sign}
+        Ce bit de sortie vaut 1 si et seulement la sortie est de signe négatif (ce qui ne peut arriver que lors de soustractions).
+
+        \subsubsection{Carry / Overflow}
+        Ce bit de sortie vaut 1 si et seulement si il y a eu dépassement de la valeur possible sur 8 bits (ou de manière équivalente, il y a une retenue qui dépasse les 8 bits présents).
+        
 \clearpage
     
-\section{Bits de contrôle globaux}
+\section{Bits globaux}
+
+\subsection{Bits de contrôle}
 
 \begin{center}
 	\ttfamily
 	\begin{tabular}{|c|c|c|c|c|c|c|c|}
 		\hline
-		instr	& op & flags & zb & ma & mb & lg & mo \\
+		instr	& op & flags & \textit{op2} & \textit{op1} & \textit{op0} & \textit{f1} & \textit{f0}\\
+		          %& abc & de &&&&&\\
+            \hline
+		nop		& 000 & 00 & 0 & 0 & 0 & 0 & 0 \\
+		ldi		& 000 & 01 & 0 & 0 & 0 & 0 & 1 \\
+				  & 000 & 10 & 0 & 0 & 0 & 1 & 0 \\
+				  & 000 & 11 & 0 & 0 & 0 & 1 & 1 \\
 		\hline
-		nop		& 000 & 00 & X & X & X & X & X \\
-		ldi		& 000 & 01 & X & X & X & X & X \\
-				& 000 & 10 & X & X & X & X & X \\
-				& 000 & 11 & X & X & X & X & X \\
+		not		& 001 & 00 & 0 & 0 & 1 & 0 & 0 \\
+		lsr		& 001 & 01 & 0 & 0 & 1 & 0 & 1 \\
+		or		& 001 & 10 & 0 & 0 & 1 & 1 & 0 \\
+		and		& 001 & 11 & 0 & 0 & 1 & 1 & 1 \\
 		\hline
-		not		& 001 & 00 & 1 & 1 & X & X & 0 \\
-		lsr		& 001 & 01 & 0 & 0 & 0 & 0 & 0 \\
-		or		& 001 & 10 & 0 & 1 & 1 & 1 & 1 \\
-		and		& 001 & 11 & 0 & 0 & 0 & 1 & 0 \\
+		addi	& 010 & 00 & 0 & 1 & 0 & 0 & 0 \\
+		add		& 010 & 01 & 0 & 1 & 0 & 0 & 1 \\
+		subi	& 010 & 10 & 0 & 1 & 0 & 1 & 0 \\
+		sub		& 010 & 11 & 0 & 1 & 0 & 1 & 1 \\
 		\hline
-		addi	& 010 & 00 & 0 & 0 & 0 & 0 & 0 \\
-		add		& 010 & 01 & 0 & 0 & 0 & 0 & 0 \\
-		subi	& 010 & 10 & 0 & 1 & 0 & 0 & 1 \\
-		sub		& 010 & 11 & 0 & 1 & 0 & 0 & 1 \\
+		muli	& 011 & 00 & 0 & 1 & 1 & 0 & 0 \\
+		mul		& 011 & 01 & 0 & 1 & 1 & 0 & 1 \\
 		\hline
-		muli	& 011 & 00 & X & X & X & X & X \\
-		mul		& 011 & 01 & X & X & X & X & X \\
-		compi	& 011 & 10 & 0 & 1 & 0 & 0 & 1 \\
-		comp	& 011 & 11 & 0 & 1 & 0 & 0 & 1 \\
+		st		& 100 & 00 & 0 & 1 & 0 & 1 & 0 \\
+		ld		& 100 & 01 & 0 & 1 & 0 & 1 & 0 \\
+		out		& 100 & 10 & 1 & 0 & 0 & 1 & 0 \\
+		in		& 100 & 11 & 1 & 0 & 0 & 1 & 1 \\
 		\hline
-		st		& 100 & 00 & 0 & 0 & 0 & 0 & 0 \\
-		ld		& 100 & 01 & 0 & 0 & 0 & 0 & 0 \\
-		out		& 100 & 10 & X & X & X & X & X \\
-		in		& 100 & 11 & X & X & X & X & X \\
+		jr		& 101 & 00 & 1 & 0 & 1 & 0 & 0 \\
+				  & 101 & 01 & 1 & 0 & 1 & 0 & 1 \\
+				  & 101 & 10 & 1 & 0 & 1 & 1 & 0 \\
+				  & 101 & 11 & 1 & 0 & 1 & 1 & 1 \\
 		\hline
-		jr		& 101 & 00 & X & X & X & X & X \\
-				& 101 & 01 & X & X & X & X & X \\
-				& 101 & 10 & X & X & X & X & X \\
-				& 101 & 11 & X & X & X & X & X \\
+		jeq		& 110 & 00 & 0 & 1 & 0 & 1 & 0 \\
+		jle		& 110 & 01 & 0 & 1 & 0 & 1 & 0 \\
+		jlt		& 110 & 10 & 0 & 1 & 0 & 1 & 0 \\
+		jne		& 110 & 11 & 0 & 1 & 0 & 1 & 0 \\
 		\hline
-		jeq		& 110 & 00 & 0 & 1 & 0 & 0 & 1 \\
-		jle		& 110 & 01 & 0 & 1 & 0 & 0 & 1 \\
-		jlt		& 110 & 10 & 0 & 1 & 0 & 0 & 1 \\
-		jne		& 110 & 11 & 0 & 1 & 0 & 0 & 1 \\
-		\hline
-		jmp		& 111 & 00 & X & X & X & X & X \\
-		jmp		& 111 & 01 & X & X & X & X & X \\
-		jmp		& 111 & 10 & X & X & X & X & X \\
-		jmp		& 111 & 11 & X & X & X & X & X \\
+		jmp		& 111 & 00 & 1 & 1 & 1 & 0 & 0 \\
+		jmp		& 111 & 01 & 1 & 1 & 1 & 0 & 1 \\
+		jmp		& 111 & 10 & 1 & 1 & 1 & 1 & 0 \\
+		jmp		& 111 & 11 & 1 & 1 & 1 & 1 & 1 \\
 		\hline
 	\end{tabular}
 \end{center}
 
+
+\subsubsection{Sauts}
+
+    \begin{center}
+    	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		instr & \textit{do\_jcc} & \textit{do\_jmp\_abs} & \textit{do\_jmp\_cnd} &
+\textit{do\_jr} & \textit{is\_jmp} & \textit{jcc}\\
+		          %& abc & de &&&&&\\
+            \hline
+		nop		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		ldi		& 0 & 0 & 0 & 0 & 0 & 0 \\
+				  & 0 & 0 & 0 & 0 & 0 & 0 \\
+				  & 0 & 0 & 0 & 0 & 0 & 0 \\
+		\hline
+		not		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		lsr		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		or		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		and		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		\hline
+		addi	& 0 & 0 & 0 & 0 & 0 & 0 \\
+		add		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		subi	& 0 & 0 & 0 & 0 & 0 & 0 \\
+		sub		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		\hline
+		muli	& 0 & 0 & 0 & 0 & 0 & 0 \\
+		mul		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		\hline
+		st		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		ld		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		out		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		in		& 0 & 0 & 0 & 0 & 0 & 0 \\
+		\hline 
+		jr		& 0 & 0 & 0 & 1 & 1 & 0 \\
+				  & X & X & X & X & X & X \\
+				  & X & X & X & X & X & X \\
+				  & X & X & X & X & X & X \\
+		\hline
+		jeq		& 1 & 0 & 1 & 0 & 1 & 1 \\
+		jle		& 1 & 0 & 1 & 0 & 1 & 1 \\
+		jlt		& 1 & 0 & 1 & 0 & 1 & 1 \\
+		jne		& 1 & 0 & 1 & 0 & 1 & 1 \\
+		\hline
+		jmp		& 0 & 1 & 0 & 0 & 1 & 0 \\
+		jmp		& 0 & 1 & 0 & 0 & 1 & 0 \\
+		jmp		& 0 & 1 & 0 & 0 & 1 & 0 \\
+		jmp		& 0 & 1 & 0 & 0 & 1 & 0 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+Les bits de contrôle liés aux sauts sont : \textit{do\_jcc}, \textit{do\_jmp\_abs}, \textit{do\_jmp\_cnd},
+\textit{do\_jr}, \textit{is\_jmp},  \textit{jcc}, \textit{jeq}, \textit{jle}, \textit{jlt}, \textit{jne}, \textit{jmp\_abs}, et \textit{jr}.
+
+\hcf{do_jcc.png}{Bit de contrôle \textit{do\_jcc}.}
+
+\paragraph{\textit{do\_jcc}} vaut 1 si et seulement si l'instruction courante est un saut conditionnel et que la condition de saut est vérifiée.
+
 \clearpage
 
-\section{Autres bits de contrôles}
+\hcf{do_jmp_abs.png}{Bit de contrôle \textit{do\_jmp\_abs}.}
+
+\paragraph{\textit{do\_jmp\_abs}} vaut 1 si et seulement si l'instruction courante est un saut absolu.
+
+\hcf{do_jmp_cnd.png}{Bit de contrôle \textit{do\_jmp\_cnd}.}
+
+\paragraph{\textit{do\_jmp\_cnd}} vaut 1 si et seulement si l'instruction courante est un saut conditionnel.
+
+\qcf{do_jr.png}{Bit de contrôle \textit{do\_jr}.}
+
+\paragraph{\textit{do\_jr}} vaut 1 si et seulement si l'instruction courante est \texttt{jr}.
+
+\clearpage
+
+\hcf{is_jmp.png}{Bit de contrôle \textit{is\_jmp}.}
+
+\paragraph{\textit{is\_jmp}} vaut 1 si et seulement si le processeur lit une instruction de saut (\texttt{jr}, \texttt{jmp} ou tout saut conditionnel).
+
+\hcf{jcc.png}{Bits de contrôles liés aux instructions spécifiques des sauts conditionnels.}
+
+\paragraph{\textit{jeq}, \textit{jle}, \textit{jlt} et \textit{jne}} valent 1 respectivement quand l'instruction éponyme est l'instruction courante.
+
+\clearpage
+
+\subsubsection{Utilisation de la RAM}
+
+Les bits de contrôle liés à l'utilisation de la RAM sont : \textit{mem\_access}, \textit{write\_mem} et \textit{read\_mem}.
+
+\hcf{ctrl_mem.png}{Bits de contrôles liés à l'utilisation de la mémoire.}
+
+\paragraph{\textit{mem\_access}} vaut 1 si et seulement si l'instruction courante est \texttt{ld} ou \texttt{st}.
+
+\paragraph{\textit{write\_mem}} vaut 1 si et seulement si l'instruction courante est \texttt{st}.
+
+\paragraph{\textit{read\_mem}} vaut 1 si et seulement si l'instruction courante est \texttt{ld}.
+
+\clearpage
+
+\subsubsection{Autre}
+
+    \begin{center}
+    	\begin{tabular}{|c|c|c|c|}
+		\hline
+		instr & \textit{src2\_is\_rd} & \textit{res\_imm} & \textit{arg2\_imm}\\
+		          %& abc & de &&&&&\\
+            \hline
+		nop		& X & X & X\\
+		ldi		& 0 & 1 & 0\\
+				  & X & X & X\\
+				  & X & X & X\\
+		\hline
+		not		& 0 & 0 & X\\
+		lsr		& 0 & 0 & 1\\
+		or		& 0 & 0 & 0\\
+		and		& 0 & 0 & 0\\
+		\hline
+		addi	& 0 & 0 & 1\\
+		add		& 0 & 0 & 0\\
+		subi	& 0 & 0 & 1\\
+		sub		& 0 & 0 & 0\\
+		\hline
+		muli	& 0 & 0 & 1\\
+		mul		& 0 & 0 & 0\\
+		\hline
+		st		& 1 & 0 & 1\\
+		ld		& 1 & 0 & 1\\
+		out		& 1 & 0 & X\\
+		in		& 0 & 0 & X\\
+		\hline 
+		jr		& 1 & 0 & 0\\
+				  & X & X & X\\
+				  & X & X & X\\
+				  & X & X & X\\
+		\hline
+		jeq		& 1 & 1 & 0\\
+		jle		& 1 & 1 & 0\\
+		jlt		& 1 & 1 & 0\\
+		jne		& 1 & 1 & 0\\
+		\hline
+		jmp		& 0 & 1 & 1\\
+		jmp		& 0 & 1 & 1\\
+		jmp		& 0 & 1 & 1\\
+		jmp		& 0 & 1 & 1\\
+		\hline
+	\end{tabular}
+\end{center}
+
+Les autres bits de contrôles sont : \textit{src2\_is\_rd}, \textit{res\_imm} et \textit{arg2\_imm}.
+
+\hcf{src2_is_rd.png}{Bit de contrôle \textit{src2\_is\_rd}.}
+
+\paragraph{\textit{src2\_is\_rd}} vaut 1 si et seulement si l'instruction utilise le registre \texttt{rd} pour y réaliser des opérations.
+C'est le cas pour les sauts conditionnels ou de registres, les accès en mémoire ou l'écriture sur l'écran.
+
+\hcf{res_imm.png}{Bit de contrôle \textit{res\_imm}.}
+
+\paragraph{\textit{res\_imm}} vaut 1 si et seulement si l'instruction a pour résultat l'immédiat donné en argument.
+C'est le cas pour \texttt{ldi}.
+
+\hcf{arg2_imm.png}{Bit de contrôle \textit{arg2\_imm}.}
+
+\paragraph{arg2\_imm} vaut 1 si et seulement si le deuxième argument de l'instruction est un immédiat.
+C'est le cas pour toutes les opérations dont le nom se termine par i ou \texttt{lsr}.
+
+\clearpage
+
+\subsection{Bits de statut}
+
+\hcf{do_sub.png}{Bit de contrôle \textit{do\_sub}.}
+
+\paragraph{\textit{do\_sub}} vaut 1 si et seulement si l'instruction courante demande l'utilisation de l'ALU en mode soustracteur.
+
+\hcf{in_out.png}{Bits de contrôle d'entrée-sortie.}
+
+\paragraph{\textit{in}} vaut 1 si et seulement si l'instruction courante est \texttt{in}.
+
+\paragraph{\textit{out}} vaut 1 si et seulement si l'instruction courante est \texttt{out}.
+
+\paragraph{\textit{rd=rs} et \textit{rd<rs}} valent respectivement 1 lorsque la valeur contenue dans \texttt{rd} est égale (respectivement strictement inférieure) à la valeur contenue dans \texttt{rs}. 
 
 \clearpage
 
 \section{Changements apportés au compilateur}
 
+\subsection{asm.ml / asm.mli}
+
+\subsubsection{asm.mli}
+
+\subsubsection{asm.ml}
+
+\fmo{../patch/digcomp_jb.patch.dbu}{Type instr}{5}{25}
+
+Ajout dans l'implémentation du type \textit{instr} (correspondant aux instructions) des instructions \texttt{not}, \texttt{lsr}, \texttt{or}, \texttt{and} et \texttt{jr}.
+
+Modification dans l'implémentation du type \textit{instr} des instructions \texttt{ld} et \texttt{st} pour gérer la partie \texttt{imm5} de ces instructions.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{Fonction dump\_instr}{26}{56}
+
+Ajout dans la fonction de \textit{dump} à la compilation \textit{dump\_instr} des instructions \texttt{not}, \texttt{lsr}, \texttt{or}, \texttt{and}, \texttt{mul}, \texttt{muli} et \texttt{jr}.
+
+Modification dans la fonction de \textit{dump} à la compilation \textit{dump\_instr} des instructions \texttt{ld} et \texttt{st} pour gérer la partie \texttt{imm5} de ces instructions.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{../patch/digcomp\_jb.patch.dbu}{57}{104}
+
+Ajout dans \textit{op} des instructions \texttt{not}, \texttt{lsr}, \texttt{or}, \texttt{and}, \texttt{mul}, \texttt{muli} et \texttt{jr}.
+
+Modification dans \textit{op} des instructions \texttt{ld} et \texttt{st} pour gérer la partie \texttt{imm5} de ces instructions.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{../patch/digcomp\_jb.patch.dbu}{105}{129}
+
+Ajout dans la déclaration du type \textit{instr} des instructions \texttt{not}, \texttt{lsr}, \texttt{or}, \texttt{and}, \texttt{mul}, \texttt{muli} et \texttt{jr}.
+
+Modification dans la déclaration du type \textit{instr} des instructions \texttt{ld} et \texttt{st} pour gérer la partie \texttt{imm5} de ces instructions.
+
+\fmo{../patch/digcomp_jb.patch.dbu}{../patch/digcomp\_jb.patch.dbu}{133}{141}
+
+Ajout du numéro en ligne en hexadécimal dans le dump.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{../patch/digcomp\_jb.patch.dbu}{145}{166}
+
+Ajout dans les reconnaissances des instructions en token de \texttt{lexer.mll} des instructions \texttt{not}, \texttt{lsr}, \texttt{or}, \texttt{and}, \texttt{mul}, \texttt{muli} et \texttt{jr}.
+
+\clearpage
+
+\fmo{../patch/digcomp_jb.patch.dbu}{../patch/digcomp\_jb.patch.dbu}{170}{209}
+
+Ajout des syntaxes \textit{instr} des instructions \texttt{not}, \texttt{lsr}, \texttt{or}, \texttt{and}, \texttt{mul}, \texttt{muli} et \texttt{jr}.
+
+Modification des syntaxes des instructions \texttt{ld}, \texttt{st} et \texttt{mov} pour gérer la partie \texttt{imm5} de ces instructions.
+
 \clearpage
 
 \section{Codes de tests}
 
+Dans cette partie, un X signifie que l'on ne connaît pas la valeur.
+
+\subsection{Vérification des opérations logiques (\texttt{not, lsr, or} et \texttt{and})}
+
+\fm{../tests/lg.s}{../tests/lg.s}
+
+Ce code teste les instructions \texttt{not, lsr, or} et \texttt{and}.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & 16 & 48 &  0 &  X & 16 & 48 & 8  & 255\\
+         \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Vérification des opérations arithmétiques (\texttt{add / addi, sub / subi, mul / muli})}
+
+\fm{../tests/}{../tests/arith.s}
+
+Le programme \texttt{arith.s} teste les fonctions \texttt{add / addi}, \texttt{sub / subi} et \texttt{mul / muli}.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & 0  & 1  & 2  &  X & 20 & 2 &  1  & -1\\
+         \hline
+    \end{tabular}
+\end{center}
+
+% \inputminted[firstline=2, lastline=12]{octave}{BitXorMatrix.m}
+
+%\begin{minted}[frame=lines,framesep=2mm,baselinestretch=1.2,bgcolor=LightGray,fontsize=\footnotesize,linenos]{python}
+
+\clearpage
+
+\subsection{Vérification de l'accès en lecture et écriture à la RAM (\texttt{ld, st})}
+
+\fm{../tests/mem.s}{../tests/mem.s}
+
+Le programme \texttt{mem.s} teste l'accès en lecture (\texttt{ld}) et écriture (\texttt{st}) à la mémoire RAM.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & 0  & 1  & 2  &  X & 20 & 2 &  1  & -1=255\\
+         \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Vérification de l'entrée-sortie (\texttt{in, out})}
+
+\fm{../tests/io.s}{../tests/io.s}
+
+Le programme \texttt{io.s} teste les entrées-sorties sur le processeur à l'aide du clavier et de l'écran présents dans \texttt{io.lgf}.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & getchar()  & X  & X  &  X & X  & X  &  X & 255\\
+         \hline
+    \end{tabular}
+\end{center}
+
+
+\subsection{Vérification du saut en registre (\texttt{jr})}
+
+\fm{../tests/jr.s}{../tests/jr.s}
+
+Le programme \texttt{jr.s} fait un saut en registre (\texttt{jr}) vers l'adresse 1 (donc la deuxième instruction).
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & r0  & 1  & X  &  X & X  & X  &  X & X\\
+         \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Vérification des sauts conditionnels (\texttt{jeq, jle, jlt} et \texttt{jne})}
+
+\fm{../tests/jcc.s}{../tests/jcc.s}
+
+Le programme \texttt{jcc.s} teste \texttt{jeq}, \texttt{jle} et \texttt{jlt}.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & 42  & 0  & 74  &  X & X  & X  &  X & 49\\
+         \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Vérification du saut dans le passé}
+
+\fm{../tests/pj.s}{../tests/pj.s}
+
+Le programme \texttt{pj.s} teste les sauts conditionnels (ici \texttt{jeq}) dans le passé.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & getchar() & X  & X  &  X & X  & X  &  X & -1=255\\
+         \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Vérification du saut dans le futur}
+
+\begin{figure}
+    \centering
+    \inputminted{asm}{../tests/fj.s}
+    \caption{\texttt{../tests/fj.s}}
+    \label{fig:fj.s}
+\end{figure}
+
+Le programme \texttt{fj.s} teste les sauts conditionnels (ici \texttt{jeq}) dans le futur.
+
+État des registres en fin d'exécution :
+\begin{center}
+    \ttfamily
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|} 
+         \hline
+         registre & r0 & r1 & r2 & r3 & r4 & r5 & r6 & r7 \\
+         \hline
+         valeur   & getchar()  & X  & X  &  X & X  & X  &  X & -1=255\\
+         \hline
+    \end{tabular}
+\end{center}
+
 \clearpage
 
 \section*{Conclusion}
+
+Toutes les questions ont été réalisées mais le processeur peut encore être amélioré avec d'autres types d'instructions comme par exemple la gestion de prédicats.
 
 \end{document}
