@@ -16,11 +16,11 @@ eol:	out r3 # putchar() <- r3
 	ldi r3, 0
 	
 loop2:	out r7 # putchar() <- r7
-	subi r1, r0, 1 # r2 <- r3
-	add r6, r5, r1 # r6 <- r5+r3
+	subi r1, r0, 1 # r1 <- r0-1
+	add r6, r5, r1 # r6 <- r5+r1
 	ld r7, r6, 0 # r7 <- MEM[r6+0]
 	out r7 # putchar() <- r7
-	addi r0, r1, 0 # r3 <- r2+1
+	addi r0, r1, 0 # r0 <- r1
 	jeq r0, r3, end # if (r0 == r3) goto end
 	jmp loop2 # goto loop2
 
