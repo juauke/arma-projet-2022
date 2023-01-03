@@ -31,7 +31,7 @@ For instance, here is what each program verifies:
 ## Compiler patching
 
 1. Add your previous version: <br/>
-Copy your previous digcomp binary to `patch/` as **digcomp_orig** .
+* Copy your previous digcomp binary to `patch/` as **digcomp_orig** .
 
 2. Run the patch:
 * $ cd digcomp <br/>
