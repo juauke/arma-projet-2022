@@ -1,0 +1,209 @@
+#===============================#       diff -urN digcomp_orig/asm.ml digcomp_new/asm.ml
+# In asm.ml                     #       --- digcomp_orig/asm.ml	2022-10-17 15:01:51.000000000 +0200
+#    ------                     #       +++ digcomp_new/asm.ml	2023-01-03 08:01:41.617126449 +0100
+#                               #       @@ -30,12 +30,19 @@
+#                               #        type instr =
+#                               #              Nop
+#                               #            | Ldi   of (int * int)   (** rd, imm8 *)
+#   Add instruction not         #       +    | Not   of (int * int)   (** rd, rs *)
+#   Add instruction lsr         #       +    | Lsr   of (int * int * int)        (** rd, rs, imm5 *)
+#   Add instruction or          #       +    | Or    of (int * int * int)        (** rd, rs, rt *)
+#   Add instruction and         #       +    | And   of (int * int * int)        (** rd, rs, rt *)
+#                               #            | Add   of (int * int * int * bool) (** rd, rs, rt, sub? *)
+#                               #            | Addi  of (int * int * int * bool) (** rd, rs, imm5, sub? *)
+#   Suppress old instruction Ld #       -    | Load  of (int * int) (** rd, rs *)
+#   Suppress old instruction st #       -    | Store of (int * int) (** rs, rd *)
+#   Add instruction mul         #       +    | Mul   of (int * int * int) (** rd, rs, rt *)
+#   Add instruction muli        #       +    | Muli  of (int * int * int) (** rd, rs, imm5 *)
+#   Add new instruction ld      #       +    | Load  of (int * int * int ) (** rd, rs, imm5 *)
+#   Add new instruction st      #       +    | Store of (int * int * int ) (** rs, rd, imm5 *)
+#                               #            | In    of int         (** rd *)
+#                               #            | Out   of int         (** rs *)
+#   Add instruction jr          #       +    | Jr    of (int * int) (** rd, rs *)
+#                               #            | CJmp  of (int * int * label * cond) (** rd, rs, addr, cond *)
+#                               #            | Jmp   of label (** label name *)
+#                               #            
+#                               #       @@ -48,20 +55,29 @@
+#                               #        let dump_instr = fun i -> match i with
+#                               #        | Nop -> Printf.printf ".\n"
+#                               #        | Ldi (r,v) -> Printf.printf "r%d <- %d\n" r v
+#   Add not dump instruction    #       +| Not (rd,rs) -> Printf.printf "r%d <- not(r%d)\n" rd rs
+#   Add lsr dump instruction    #       +| Lsr (rd,rs,s) -> Printf.printf "r%d <- r%d >> %d\n" rd rs s
+#   Add or dump instruction     #       +| Or  (rd,rs,rt) -> Printf.printf "r%d <- r%d || r%d\n" rd rs rt
+#   Add and dump instruction    #       +| And (rd,rs,rt) -> Printf.printf "r%d <- r%d && r%d\n" rd rs rt
+#                               #        | Add (rd,rs,rt,b) ->
+#                               #                let c = if b then '-' else '+' in
+#                               #                Printf.printf "r%d <- r%d %c r%d\n" rd rs c rt
+#                               #        | Addi (rd,rs,v,b) ->
+#                               #                let c = if b then '-' else '+' in
+#                               #                Printf.printf "r%d <- r%d %c %d\n" rd rs c v
+#   Sup. ld old dump instrction #       -| Load (rd, rs) ->
+#       "                       #       -        Printf.printf "r%d <- MEM[r%d]\n" rd rs
+#   Sup. st old dump instrction #       -| Store (rs, rd) ->
+#       "                       #       -        Printf.printf "MEM[r%d] <- r%d\n" rs rd
+#   Add mul dump instruction    #       +| Mul (rd,rs,rt) ->
+#       "                       #       +        Printf.printf "r%d <- r%d x r%d mod 256\n" rd rs rt
+#   Add muli dump instruction   #       +| Muli (rd,rs,v) ->
+#       "                       #       +        Printf.printf "r%d <- r%d x %d mod 256\n" rd rs v
+#   Add ld dump instruction     #       +| Load (rd, rs, im) ->
+#       "                       #       +        Printf.printf "r%d <- MEM[r%d+%d]\n" rd rs im
+#   Add st dump instruction     #       +| Store (rd, rs, im) ->
+#       "                       #       +        Printf.printf "MEM[r%d+%d] <- r%d\n" rs rd im
+#                               #        | In rd ->
+#                               #                Printf.printf "r%d <- getchar()\n" rd
+#                               #        | Out rs ->
+#                               #                Printf.printf "putchar(r%d)\n" rs
+#   Add jr dump instruction     #       +| Jr (rd,rs) -> Printf.printf "goto r%d + r%d x 256\n" rs rd
+#                               #        | CJmp (rd,rs,lbl,cd) ->
+#                               #                let op = match cd with
+#                               #                         | LT -> "<"
+#                               #       @@ -137,20 +153,40 @@
+#                               #                    instr_to_bin_type2 0b000 0 0 0 0
+#                               #            | Ldi (r,v) ->
+#                               #                    instr_to_bin_type2 0b000 0 1 r v
+#   Add not dump instruction    #       +    | Not (rd,rs) ->
+#       "                       #       +            instr_to_bin_type1b 0b001 0 0 rd rs 0
+#   Add lsr dump instruction    #       +    | Lsr (rd,rs,s) ->
+#       "                       #       +            instr_to_bin_type1b 0b001 0 1 rd rs s
+#   Add or dump instruction     #       +    | Or  (rd,rs,rt) ->
+#       "                       #       +            instr_to_bin_type1 0b001 1 0 rd rs rt
+#   Add and dump instruction    #       +    | And (rd,rs,rt) ->
+#       "                       #       +            instr_to_bin_type1 0b001 1 1 rd rs rt
+#                               #            | Add (rd,rs,rt,b) ->
+#                               #                    let f1 = if b then 1 else 0 in
+#                               #                    instr_to_bin_type1 0b010 f1 1 rd rs rt
+#                               #            | Addi (rd,rs,v,b) ->
+#                               #                    let f1 = if b then 1 else 0 in
+#                               #                    instr_to_bin_type1b 0b010 f1 0 rd rs v
+#   Old ld asm2bin command      #       -    | Load (rd,rs) ->
+#       "                       #       -            instr_to_bin_type1b 0b100 0 1 rd rs 0
+#   Old st asm2bin command      #       -    | Store (rs,rd) ->
+#       "                       #       -            instr_to_bin_type1b 0b100 0 0 rd rs 0
+#   Add mul asm2bin command     #       +    | Mul (rd,rs,rt) ->
+#       "                       #       +            instr_to_bin_type1 0b011 0 1 rd rs rt
+#   Add muli asm2bin command    #       +    | Muli (rd,rs,v) ->
+#       "                       #       +            instr_to_bin_type1b 0b011 0 0 rd rs v
+#   Add ld asm2bin command      #       +    | Load (rd,rs,v) ->
+#       "                       #       +            if -16 <= v && v <= 15 then
+#       "                       #       +            	instr_to_bin_type1b 0b100 0 1 rd rs v
+#       "                       #       +            else
+#       "                       #       +                failwith ("Load in memory: Bad value imm5")               
+#   Add st asm2bin command      #       +    | Store (rs,rd,v) ->
+#       "                       #       +            if -16 <= v && v <= 15 then
+#       "                       #       +            	instr_to_bin_type1b 0b100 0 0 rd rs v
+#       "                       #       +            else
+#       "                       #       +                failwith ("Load in memory: Bad value imm5")               
+#                               #            | In rd ->
+#                               #                    instr_to_bin_type2 0b100 1 1 rd 0
+#                               #            | Out rs ->
+#                               #                    instr_to_bin_type2 0b100 1 0 rs 0
+#   add jr asm2bin command      #       +    | Jr (rd,rs) ->
+#       "                       #       +            instr_to_bin_type1b 0b111 0 0 rd rs 0
+#                               #            | CJmp (rd,rs,lbl,cd) ->
+#                               #                    let (f1,f2) = match cd with
+#                               #                                  | EQ -> (0,0)
+#===============================#       diff -urN digcomp_orig/asm.mli digcomp_new/asm.mli
+# In asm.mli                    #       --- digcomp_orig/asm.mli	2018-03-05 15:26:51.000000000 +0100
+#    -------                    #       +++ digcomp_new/asm.mli	2023-01-03 08:01:41.617126449 +0100
+#                               #       @@ -35,12 +35,19 @@
+#                               #        type instr =
+#                               #              Nop
+#                               #            | Ldi   of (int * int)   (** rd, imm8 *)
+#   Add declaration not         #       +    | Not   of (int * int)   (** rd, rs *)
+#   Add declaration lsr         #       +    | Lsr   of (int * int * int)        (** rd, rs, uimm5 *)
+#   Add declaration or          #       +    | Or    of (int * int * int)        (** rd, rs, rt *)
+#   Add declaration and         #       +    | And   of (int * int * int)        (** rd, rs, rt *)
+#                               #            | Add   of (int * int * int * bool) (** rd, rs, rt, sub? *)
+#                               #            | Addi  of (int * int * int * bool) (** rd, rs, uimm5, sub? *)
+#   Sup. old declaration ld     #       -    | Load  of (int * int) (** rd, rs *)
+#   Sup. old declaration st     #       -    | Store of (int * int) (** rs, rd *)
+#   Add declaration mul         #       +    | Mul   of (int * int * int) (** rd, rs, rt *)
+#   Add declaration muli        #       +    | Muli  of (int * int * int) (** rd, rs, uimm5 *)
+#   Add declaration ld          #       +    | Load  of (int * int * int ) (** rd, rs, imm5 *)
+#   Add declaration st          #       +    | Store of (int * int * int ) (** rs, rd, imm5 *)
+#                               #            | In    of int         (** rd *)
+#                               #            | Out   of int         (** rs *)
+#   Add declaration jr          #       +    | Jr    of (int * int)   (** rd, rs *)
+#                               #            | CJmp  of (int * int * label * cond) (** rs, rt, addr, cond *)
+#                               #            | Jmp   of label (** addr *)
+#                               #        
+#===============================#       diff -urN digcomp_orig/digcomp.ml digcomp_new/digcomp.ml
+# In digcomp.ml                 #       --- digcomp_orig/digcomp.ml	2021-11-09 15:08:37.000000000 +0100
+#    ----------                 #       +++ digcomp_new/digcomp.ml	2023-01-03 08:01:41.617126449 +0100
+#                               #       @@ -102,7 +102,7 @@
+#                               #                    let _ = Printf.printf "--------\n" in
+#                               #                    let _ = List.iteri
+#                               #                                (fun idx instr ->
+#   Sup old line diag digcomp   #       -                            let _ = Printf.printf "%4d: " idx in
+#   Add hexa on diag digcomp    #       +                            let _ = Printf.printf "%4d [x%04x]: " idx idx in
+#                               #                                    dump_instr instr
+#                               #                                )
+#                               #                                code
+#                               #       diff -urN digcomp_orig/lexer.mll digcomp_new/lexer.mll
+#                               #       --- digcomp_orig/lexer.mll	2021-11-09 15:19:17.000000000 +0100
+#                               #       +++ digcomp_new/lexer.mll	2023-01-03 08:01:41.617126449 +0100
+#                               #       @@ -8,14 +8,21 @@
+#                               #            [ "nop",  NOP;
+#                               #              "ldi",  MOV;
+#                               #              "mov",  MOV;
+#   Link word not to token NOT  #       +      "not",  NOT;
+#   Link word lsr to token LSR  #       +      "lsr",  LSR;
+#   Link word or to token OR    #       +      "or",   OR;
+#   Link word and to token AND  #       +      "and",  AND;
+#                               #              "add",  ADD;
+#                               #              "addi", ADDI;
+#                               #              "sub",  SUB;
+#                               #              "subi", SUBI;
+#   Link word mul to token MUL  #       +      "mul",  MUL;
+#   Link word muli to token MULI#       +      "muli", MULI;
+#                               #              "ld",   LD;
+#                               #              "st",   ST;
+#                               #              "in",   IN;
+#                               #              "out",  OUT;
+#   Link word jr to token JR    #       +      "jr",   JR;
+#                               #              "jlt",  JLT;
+#                               #              "jle",  JLE;
+#                               #              "je",   JEQ;
+#===============================#       diff -urN digcomp_orig/parser.mly digcomp_new/parser.mly
+# In parser.mly.mly             #       --- digcomp_orig/parser.mly	2021-11-09 15:30:55.000000000 +0100
+#    --------------             #       +++ digcomp_new/parser.mly	2023-01-03 08:01:41.617126449 +0100
+#                               #       @@ -4,7 +4,7 @@
+#                               #        
+#                               #        
+#                               #        %token <int> INT
+#  Add new tokens               #       -%token NOP MOV ADD ADDI SUB SUBI JMP LD ST IN OUT JLE JLT JEQ JNE
+#   NOT LSR OR AND MUL & MULI   #       +%token NOP MOV NOT LSR OR AND ADD ADDI SUB SUBI MUL MULI JMP LD ST IN OUT JR JLE JLT JEQ JNE
+#                               #        %token COMA COLON LPAR RPAR
+#                               #        %token <int> REG
+#                               #        %token <string> LABEL
+#                               #       @@ -27,6 +27,10 @@
+#                               #          | NOP                           { Nop }
+#                               #          | MOV REG COMA INT              { Ldi ($2,$4) }
+#                               #          | MOV REG COMA REG              { Addi ($2,$4,0,false)  }
+#  Add syntax for NOT           #       +  | NOT REG COMA REG		  { Not ($2,$4) }
+#  Add syntax for LSR           #       +  | LSR REG COMA REG COMA INT	  { Lsr ($2,$4,$6) }
+#  Add syntax for OR            #       +  | OR  REG COMA REG COMA REG	  { Or  ($2,$4,$6) }
+#  Add syntax for AND           #       +  | AND REG COMA REG COMA REG	  { And ($2,$4,$6) }
+#                               #          | ADD REG COMA REG COMA REG     { Add  ($2,$4,$6,false) }
+#                               #          | ADDI REG COMA REG COMA INT    { assert (0<=$6 && $6<32); Addi ($2,$4,$6,false) }
+#                               #          | ADD REG COMA REG COMA INT     { assert (0<=$6 && $6<32); Addi ($2,$4,$6,false) }
+#                               #       @@ -34,12 +38,15 @@
+#                               #          | SUB REG COMA REG COMA REG     { Add  ($2,$4,$6,true)  }
+#                               #          | SUB REG COMA REG COMA INT     { assert (0<=$6 && $6<32); Addi ($2,$4,$6,true)  }
+#                               #          | SUBI REG COMA REG COMA INT    { assert (0<=$6 && $6<32); Addi ($2,$4,$6,true)  }
+#  Suppress old syntax LD       #       -  | LD REG COMA REG               { Load ($2, $4)  }
+#  Suppress old syntax MOV      #       -  | MOV REG COMA LPAR REG RPAR    { Load ($2, $5)  }
+#  Suppress old syntax ST       #       -  | ST REG COMA REG               { Store ($4, $2) }
+#  Suppress old syntax MOV      #       -  | MOV LPAR REG RPAR COMA REG    { Store ($3, $6) }
+#  Add syntax for MUL           #       +  | MUL REG COMA REG COMA REG     { Mul  ($2,$4,$6) }
+#  Add syntax for MULI          #       +  | MULI REG COMA REG COMA INT    { assert (0<=$6 && $6<32); Muli ($2,$4,$6) }
+#  Add new syntax for LD        #       +  | LD REG COMA REG COMA INT      { Load ($2, $4, $6)  }
+#  Add new syntax for MOV       #       +  | MOV REG COMA LPAR REG RPAR    { Load ($2, $5, 0)  }
+#  Add new syntax for ST        #       +  | ST REG COMA REG COMA INT      { Store ($4, $2, $6) }
+#  Add new syntax for MOV       #       +  | MOV LPAR REG RPAR COMA REG    { Store ($3, $6, 0) }
+#                               #          | IN REG                        { In $2  }
+#                               #          | OUT REG                       { Out $2 }
+#  Add syntax for JR            #       +  | JR REG COMA REG               { Jr  ($2,$4) }
+#                               #          | cjump REG COMA REG COMA LABEL { CJmp ($2,$4,$6,$1) }
+#                               #          | JMP LABEL                     { Jmp $2 }
+#                               #        ;
