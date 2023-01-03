@@ -16,6 +16,15 @@
 \usepackage{graphicx}
 \graphicspath{{img/}}
 
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
 \usepackage[margin=2cm]{geometry}
 
 \usepackage{color,soul}
@@ -28,6 +37,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
+\usepackage{newcomputermodern} % loads unicode-math
 
 \usepackage{enumitem}
 
@@ -160,7 +170,7 @@
 
 L’objectif de ce projet était de réaliser un mini-processeur à partir d'un squelette. Pour ce faire, nous devions
 nous appuyer sur le jeu d’instructions d’un processeur MIPS, que nous avons implémenté dans
-le logiciel Diglog\ldots
+le logiciel Diglog.
 
 Les instructions qui ont été implémentées sont :
 {
@@ -176,6 +186,7 @@ Les instructions qui ont été implémentées sont :
     \item add
     \item subi
     \item sub
+    \item mul
     \item muli
     \item st
     \item ld
@@ -205,7 +216,7 @@ Le but de cet exercice est d’ajouter le support des sauts inconditionnels, afi
 l’exécution du programme suivant :
 }
 
-\inputminted[fontsize=\normal, bgcolor=white]{asm}{../asm/ex1/addi.s}
+\inputminted[fontsize=\normal, bgcolor=white, linenos=false]{asm}{../asm/ex1/addi.s}
     
         \subsubsection*{\textbf{1.1} Donner la valeur de chaque registre à la fin de l’exécution de ce programme.}
 
@@ -252,7 +263,7 @@ A la fin de l'exécution de ce programme, on a :
    \end{minipage}
 \end{figure}
 
-    Etant donné que la partie \texttt{.hi} contient les 8 premiers bits de la ligne et que la partie \texttt{.lo} contient les 8 derniers, on a (en traduisant les résultats hexadécimaux précédents en binaire) :
+    Etant donné que la partie \texttt{.hi} contient les 8 bits de poids fort de la ligne et que la partie \texttt{.lo} contient les 8 de poids faible, on a (en traduisant les résultats hexadécimaux précédents en binaire) :
     \begin{center}
         \begin{tabular}{|c|c|c|}
             \hline
@@ -270,20 +281,45 @@ A la fin de l'exécution de ce programme, on a :
         \subsubsection*{\textbf{1.4} Charger les fichiers obtenus dans Diglog, et déterminer le chemin suivi par les données lors de l’exécution de l’instruction \texttt{ldi}. \\
         \textbf{Note :} Pour faire une exécution pas à pas, on utilisera un générateur en guise d'horloge, sur lequel on pourra cliquer afin de passer au front (montant ou descendant) suivant.}
 
-Lors de l'instruction \texttt{ldi}, on lit sur le front montant la valeur $42$ grâce aux imm ($0b00101010$) et sur le front descendant, on écrit dans le registre \texttt{r0} cette valeur. 
+\tf{ldi.png}{Front montant lors de l'instruction \texttt{ldi}.}{ldi-write.png}{Front descendant lors de l'instruction \texttt{ldi}.}
 
-On a maintenant cette horloge :
+Lors de l'exécution de l'instruction \texttt{ldi}, on voit que :
+\begin{itemize}
+
+    \item lors du front montant, les données sont initialement sur \texttt{imm8} (\texttt{imm0-7}) ; \\
+en même temps, la valeur $42$ ($0b00101010$) se retrouve sur les pattes entrantes du \texttt{reg8} qui est alors en \textit{read\_only} ; \\
+sur les pattes d'entrée décrivant le registre d'écriture du \texttt{reg8}, on lit $0b001$ autrement dit \texttt{r1} ;
+    \item au front descendant suivant, le bit de \textit{read\_only} du \textit{reg8} s'éteint et le \textit{reg8} indique en bas le registre d'écriture qui est \textit{r1} ($0b001$).
+    
+\end{itemize}
+
+Après application de la modification indiquée en note, on a maintenant cette horloge :
     \hcf{clock.png}{Horloge pas à pas.}
 
         \subsubsection*{\textbf{1.5} Avancer d'un cycle, et déterminer le chemin suivi par les donnée lors de l'exécution de l'instruction \texttt{addi}.}
 
-Lors de l'instruction \texttt{addi}, on lit sur le front montant la valeur du registre \texttt{r0} (c'est-à-dire $42$ ou $0b00101010$) et sur le front descendant, on additionne (avec l'ALU en mode addition) cette valeur avec $17$ ($0b10001$) et on l'écrit dans le registre \texttt{r1}.
+\qcf{add.png}{Front montant lors de l'instruction \textit{addi}.}
+
+Lors de l'exécution de l'instruction \texttt{addi}, on voit que :
+\begin{itemize}
+    \item lors du front montant, on lit $42$ ($0b00101010$) dans le registre \texttt{r1} à la sortie du \texttt{reg8} que l'ALU additionne avec le $17$ ($0b10001$) lisible au niveau du \texttt{imm5} ce qui donne le résultat $59$ ($0b00111011$) en sortie de l'ALU qui retourne à l'entrée en valeur du \texttt{reg8} ;
+    \item lors du front descendant, à l'instar de la question précédente, le \texttt{reg8} se met en mode écriture (non \textit{read\_only}) et écrit dans \texttt{r0} comme alors indiqué par les bits en dessous de \texttt{reg8} par $0b000$.
+\end{itemize}
 
         \subsubsection*{\textbf{1.6} Avancer à nouveau d'un cycle, et identifier comment récupérer l'adresse à laquelle il faudra être après le saut.}
 
-Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut que l'on détermine l'écart relatif entre la position actuelle du pointeur courant (PC) et la position à laquelle on veut aller. C'est pourquoi il faut une ALU en mode soustracteur.
+\hcf{PC.png}{Compteur de programme lors de l'instruction \texttt{jmp}.}
+
+Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut lire le compteur de programme et on trouve $2$.
 
         \subsubsection*{\textbf{1.7} Déterminer le rôle des bits de contrôle \textit{write reg}, \textit{arg2\_imm} et \textit{res\_imm}, puis compléter le tableau suivant (mettre X si la valeur du bit de contrôle n'a pas d'influence) : }
+
+\paragraph{\textit{write\_reg}} est le bit de contrôle permettant d'identifier tous les cas où l'on souhaite écrire le résultat stocké sur les bits d'entrée en écriture dans le registre indiqué par les 3 bits du registre d'écriture du \texttt{reg8}.
+(il permet de désactiver le mode \textit{read\_only} sur le front descendant du registre)
+
+\paragraph{\textit{arg2\_imm}} indique les cas où le deuxième argument de l'ALU se trouve sur les bits \texttt{imm} de la commande.
+
+\paragraph{\textit{res\_imm}} indique les cas où la donnée d'entrée dans le registre pour \texttt{reg8} se trouve sur les bits \texttt{imm}. \\
         
         \begin{tabular}{|l|c|c|c|c|c|}
               \hline
@@ -295,8 +331,8 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
              \texttt{addi} & 0 & 1 & 1 & 0 & 0\\             
              \texttt{subi} & 0 & 1 & 1 & 0 & 1\\             
              \hline
-             \texttt{add}  & 0 & 1 & 0 & 1 & 0\\ 
-             \texttt{sub}  & 0 & 1 & 0 & 1 & 1\\
+             \texttt{add}  & 0 & 1 & 0 & 0 & 0\\ 
+             \texttt{sub}  & 0 & 1 & 0 & 0 & 1\\
              \hline
              \texttt{jmp}  & 1 & 0 & X & X & 0\\
              \hline
@@ -330,12 +366,16 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
         \item les instructions de soustraction : \texttt{subi} et \texttt{sub} ;
         \item les instructions de lecture en RAM : \texttt{st} et \texttt{ld} ;
         \item les sauts conditionnels : \texttt{jeq}, \texttt{jle}, \texttt{jlt} et \texttt{jne}.
-    \end{itemize}\vspace*{-\baselineskip}
+    \end{itemize}
+    
+    Pour les 6 dernières instructions, on a remplacé l'addition d'un \texttt{imm5} négatif par la soustraction de son opposé.
 
         \subsubsection*{\textbf{2.2} Modifier le processeur afin d'obtenir la bonne valeur pour le bit de contrôle \textit{do\_sub}. Vérifier que le processeur gère désormais aussi l'instruction \texttt{subi}.}
 
     \hcf{do_sub.png}{Bit de contrôle \textit{do\_sub}}
-    Le processeur gère bien l'instruction \texttt{subi}.
+    
+    Grâce au bit \textit{do\_sub}, l'ALU reçoit les mêmes entrées que pour le \texttt{addi} avec son bit de soustraction activé.
+    On obtient une instruction \texttt{subi} qui est totalement fonctionnel.
 
 \clearpage
         
@@ -343,7 +383,7 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
 
     \hcf{mod_reg8.png}{Ajout de la seconde rangée de multiplexeurs sur \texttt{reg8} pour lire la valeur d'un deuxième registre}
 
-    La seconde rangée de multiplexeurs a été ajoutée pour permettre la lecture de la valeur d'un deuxième registre dont l'indice est la nombre binaire formée par les bits 3 à 5 (correspondant à \textit{\#read2}) de l'entrée.
+    La seconde rangée de multiplexeurs a été ajoutée pour permettre la lecture de la valeur d'un deuxième registre dont l'indice est le nombre binaire formée par les bits 3 à 5 (correspondant à \textit{\#read2}) de l'entrée.
 
 \clearpage
 
@@ -356,25 +396,25 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
 		instr    & lecture(s) & bits pertinents \\
 		\hline
 		nop		&  $0$          & X \\
-		ldi		&  $1$          & rd \\
+		ldi		&  $0$          & X \\
 		\hline
-		not		&  $1$          & rd \\
-		lsr		&  $2$          & rd, rs \\
-		or		&  $3$          & rd, rs, rt \\
-		and		&  $3$          & rd, rs, rt \\
+		not		&  $1$          & rs \\
+		lsr		&  $1$          & rs \\
+		or		&  $2$          & rs, rt \\
+		and		&  $2$          & rs, rt \\
 		\hline
-		addi	&  $2$          & rd, rs \\
-		add		&  $3$          & rd, rs, rt \\
-		subi	&  $2$          & rd, rs \\
-		sub		&  $3$          & rd, rs, rt \\
+		addi	&  $1$          & rs \\
+		add		&  $2$          & rs, rt \\
+		subi	&  $1$          & rs \\
+		sub		&  $2$          & rs, rt \\
 		\hline
-		muli	&  $2$          & rd, rs \\
-		mul		&  $3$          & rd, rs, rt \\
+		muli	&  $1$          & rs \\
+		mul		&  $2$          & rs, rt \\
 		\hline
 		st		&  $2$          & rd, rs \\
-		ld		&  $2$          & rd, rs \\
+		ld		&  $1$          & rs \\
 		out		&  $1$          & rd \\
-		in		&  $1$          & rd \\
+		in		&  $0$          & X \\
 		\hline
 		jr		&  $2$          & rd, rs \\
 		\hline
@@ -393,7 +433,7 @@ Pour récupérer l'adresse à laquelle il faudra être après le saut, il faut q
 
 Les instructions \texttt{add} et \texttt{sub} sont désormais supportées.
 
-%\fmnt{../asm/q2_5/add_sub.s}{Test des instructions \texttt{add} et \texttt{sub}.}
+\fm{../asm/q2_5/add_sub.s}{Test des instructions add et sub}
 
 Les bits de contrôle n'ont pas dû être changés (car on avait déjà prévu les cas correspondant à ces deux instructions).
         
@@ -426,28 +466,30 @@ Le bit de contrôle \texttt{in} est actif lorsque lorsque l'instruction courante
 
         \subsubsection*{\textbf{3.2} Tester le clavier et l'écran. Que se passe-t-il si on récupère les données du clavier alors qu'aucune touche n'a été frappée ? Et si de nombreuses touches ont été frappées depuis la dernière récupération de touche ?}
 
-Si l'on récupère les données du clavier alors qu'aucune touche n'a été frappée, on obtient $255$ ($0b11111111$).
-Si de nombreuses touches ont été frappées, la plus ancienne est remplacée par la touche nouvellement pressée.
+Si l'on récupère les données du clavier alors qu'aucune touche n'a été frappée, on obtient $255$ ($0b11111111$). \\
+Si de nombreuses touches ont été frappées, la plus ancienne est remplacée par la touche nouvellement pressée. \\
 Le \textit{buffer} (tampon) du clavier fonctionne donc comme une file (First In First Out).
 
         \subsubsection*{\textbf{3.3} Rappeler comment on peut tester que deux valeurs entières sont égales. Modifier l'ALU afin d'avoir une nouvelle sortie, nécessaire à la réalisation du test.}
 
-Pour tester que deux valeurs sont égales, on peut vérifier que leur différence est nulle.
+Pour tester que deux valeurs sont égales, on peut vérifier que leur différence est nulle (avec une ALU par exemple).
 
 On a ajouté un bit \texttt{Zero} qui permet de savoir si la valeur en sortie de l'ALU est nulle.
 
         \subsubsection*{\textbf{3.4} Afin de gérer les instructions de saut conditionnel, nous allons utiliser le bit de contrôle \textit{do\_jcc}, qui vaudra 1 si et seulement si l'instruction courante est de type saut conditionnel et qu'il convient d'effectuer le saut en question. \\
         Faire en sorte que ce bit de contrôle reçoive la bonne valeur lors de l'exécution d'un \texttt{jeq}.}
 
-J'ai décidé de renommer le bit de contrôle en \textit{do\_jmp\_cnd} (car j'utilise \textit{do\_jcc} quand je fais effectivement le saut conditionnel [la condition est alors également vérifiée et que l'on est pas en \textit{reset}]).
+J'ai ajouté le bit de contrôle \textit{do\_jcc}.
 
-\hcf{do_jmp_cnd.png}{Bit de contrôle \textit{do\_jmp\_cnd}}
+\hcf{do_jcc.png}{Bit de contrôle \textit{do\_jcc}.}
 
-Ce bit de contrôle vaut 1 si et seulement si l'instruction courante est un saut conditionnel c'est-à-dire que \framebox[2cm][c]{op $= 110$}.
+Ce bit de contrôle vaut 1 si et seulement si l'instruction courante est un saut conditionnel c'est-à-dire que \framebox[2cm][c]{op $= 110$} et que la condition associée est vérifiée.
+
+\clearpage
 
         \subsubsection*{\textbf{3.5} Modifier le processeur afin de mettre correctement à jour le pointeur d'instruction PC lors de l'exécution d'une instruction \texttt{jeq}.}
 
-        En plus de l'ajout de la question précédente, on a ajouté un bit de contrôle \textit{do\_jcc}, l'arrivée du bit \textit{do\_jcc} comme bit de contrôle au compteur de programme.
+        En plus de l'ajout de la question précédente, on a ajouté un bit de contrôle \textit{do\_jmp\_cnd}, l'arrivée du bit \textit{do\_jcc} comme bit de contrôle au compteur de programme.
 
         \hcf{do_jcc.png}{Bit de contrôle \textit{do\_jcc}.}
 
@@ -455,13 +497,19 @@ Ce bit de contrôle vaut 1 si et seulement si l'instruction courante est un saut
 
         \hcf{clock_jcc.png}{Ajout du bit de contrôle \textit{do\_jcc} au compteur de programme.}
 
+\hcf{jmp_calc.png}{Calcul de l'adresse de saut.}
+
+    On calcule l'adresse de saut à l'aide de l'adresse courante et de l'\texttt{imm5} que l'on remplace par son opposé que l'on soustrait lorsqu'il est négatif.
+
+\clearpage
+
         \subsubsection*{\textbf{3.6} Tester le bon fonctionnement des sauts conditionnels dans le cas d'un saut :
         \begin{enumerate}
             \item en avant (vers une adresse plus grande que la valeur courante dans PC) ;
             \item en arrière (vers une adresse plus petite que la valeur courante dans PC).
         \end{enumerate}}
 
-%\tmf{../asm/q3_6/past_jump.s}{../asm/q3\_6/past\_jump.s}{../asm/q3_6/future_jump.s}{../asm/q3\_6/future\_jump.s}
+\tmf{../asm/q3_6/past_jump.s}{../asm/q3\_6/past\_jump.s}{../asm/q3_6/future_jump.s}{../asm/q3\_6/future\_jump.s}
         
 Le premier code (correspondant à un saut dans le passé) et le second (correspondant à un saut dans le futur) fonctionnent à présent.
 
@@ -469,7 +517,7 @@ Le premier code (correspondant à un saut dans le passé) et le second (correspo
 
 \fm{../asm/q3_7/char_read.s}{../asm/q3\_7/char\_read.s}
 
-Le programme \texttt{char\_read.s} lit les caractères entrés par l'utilisateur et boucle jusqu'à que l'utilisateur appuie sur la touche \textit{Entrée} du clavier.
+Le programme \texttt{char\_read.s} lit les caractères entrés par l'utilisateur et boucle jusqu'à ce que l'utilisateur appuie sur la touche \textit{Entrée} du clavier.
 
 \clearpage
 
@@ -477,7 +525,7 @@ Le programme \texttt{char\_read.s} lit les caractères entrés par l'utilisateur
 
 \fm{../asm/q3_8/char_square.s}{../asm/q3\_8/char\_square.s}
 
-Après saisie d'un chiffre non nul n et d'un caractère c par l'utilisateur, le programme \texttt{s.s} affiche un carré de c de côté de longueur n. 
+Après saisie d'un chiffre non nul $n$ et d'un caractère $c$ par l'utilisateur, le programme \texttt{char\_square.s} affiche un carré de c de côté de longueur n. 
         
         \newpage
 
@@ -497,24 +545,20 @@ On a ajouté les bits de contrôle suivants :
 
 \clearpage
 
-On a ajouté les multiplexeurs suivants :
 \hcf{ram.png}{RAM après les modifications.}
 
-\tf{mux-mem_access.png}{Multiplexeur qui permet de décaler négativement l'adresse en mémoire.}{mux-read_mem.png}{Multiplexeur qui permet de lire en mémoire lors d'un \texttt{rd}.}
+On a ajouté les multiplexeurs suivants :
+
+\tf{mux-mem_access.png}{Multiplexeur qui permet de décaler négativement l'adresse en mémoire.}{mux-read_mem.png}{Multiplexeur qui permet de lire en mémoire lors d'un \texttt{ld}.}
 
 \clearpage
 
         \subsubsection*{\textbf{4.2} Écrire un code assembleur qui récupère les touches saisies par l'utilisateur et les stocke en mémoire jusqu'à la saisie de la touche \textit{Entrée}, puis qui réécrit les données ainsi récupérées à l'écran en ordre inverse. \\
         \textbf{Exemple : } La saisie de "123<\textit{Entrée}>" donnera donc lieu à l'affichage de "321".}
 
-\fm{../asm/q4_2/reverse_int.s}{reverse\_int.s}
+\fm{../asm/q4_2/reverse_in.s}{../asm/q4\_2/reverse\_in.s}
 
-Les lignes 6 à 23 affichent 'Entier ? ' à l'écran.
-
-Dans la boucle, on commence par récupérer le caractère entrée par l'utilisateur dans \texttt{r7}, si c'est '<Entrée>', on va à la fin.
-Sinon, on vérifie que ce dernier est un chiffre (entre 0 et 9) : si c'est le cas, on continue et on convertit sa valeur en décimal.
-Sinon, on boucle.
-On affiche les chiffres dans l'ordre inverse en lisant de 0 à la taille de la chaîne entrée.
+On stocke les entiers rentrés par l'utilisateur dans la mémoire et on les écrit sur l'écran en décrémentant le décalage en mémoire de $1$ à chaque tour de la seconde boucle.
 
 \clearpage
       
@@ -538,7 +582,7 @@ Remarquons d'abord que \textit{Carry} et \textit{Overflow} sont confondus puisqu
 
         Notons $S$ et $O$ les bits de Signe (\textit{Sign}) et de Retenue (\textit{Overflow}) renvoyés par l'ALU après le calcul de $b-a$.
 
-        Notons également $C_i$ la retenue dans le calcul de $b-a$ d'ordre $i$ \in [\![ 0 ; 7 ]\!]. \\
+        Notons également $C_i$ la retenue dans le calcul de $b-a$ d'ordre $i \in \lBrack 0 ; 7 \rBrack$ . \\
 
         \hspace{-\baselineskip}Montrons que $a \leq b \iff S = O$ \\
         \framebox[1cm][c]{$\implies$} Supposons que $a \leq b$. \\
@@ -580,12 +624,12 @@ Remarquons d'abord que \textit{Carry} et \textit{Overflow} sont confondus puisqu
         \begin{itemize}
             \item Supposons que $S = 0$. \\
             Par conséquent, d'après l'hypothèse, $O = 0$.
-            Donc : $b-a \geq 0$ sans avoir dépassé c'est-à-dire que \framebox[1.5cm][c]{$a \leq b$}.
+            Donc : $b-a \geq 0$ sans avoir dépassé la capacité de l'ALU c'est-à-dire que \framebox[1.5cm][c]{$a \leq b$}.
             \item Supposons que $S = 1$.
             D'après l'hypothèse, on a $O = 1$ autrement dit $b-a \leq 0$ et le calcul a dépassé la capacité de l'ALU ce qui revient à dire que le signe est faussé et que $b-a \geq 0$ ou encore \framebox[1.5cm][c]{$a \leq b$}.
         \end{itemize}
                 
-        \subsubsection*{\textbf{4.5} Utiliser le résultat précédent et ce qui a déjà été à la section précédente pour ajouter le support des instructions \texttt{jlt}, \texttt{jle} et \texttt{jne}.}
+        \subsubsection*{\textbf{4.5} Utiliser le résultat précédent et ce qui a déjà implémenté été à la section précédente pour ajouter le support des instructions \texttt{jlt}, \texttt{jle} et \texttt{jne}.}
 
 Le support de ces instructions a été ajouté à la question \textbf{3.4}.
         
@@ -603,6 +647,8 @@ Pour réaliser le calcul beaucoup plus efficacement, on peut implémenter la mul
         \textbf{Exemple : } La saisie de "Abc1<\textit{Entrée}>" donnera donc lieu à l'affichage de "ABC1".}
 
 \fm{../asm/q4_7/char_to_caps.s}{../asm/q4\_7/char\_to\_caps.s}
+
+
                 
         \clearpage
 
@@ -648,6 +694,8 @@ Certaines questions de cet exercice impliquent de compléter le code source du c
 \fm{../asm/q5_2/int_read.s}{../asm/q5\_2/int\_read.s}
 
 On lit le caractère écrit par l'utilisateur au clavier dans \texttt{r7}, on le renvoie et on arrive à la fin si c'est un entier sinon on boucle jusqu'à que l'utilisateur entre un entier.
+
+\clearpage
          
         \subsubsection*{\textbf{5.3} Écrire un code qui effectue la division par 10 de la valeur stockée dans r0.}
 
@@ -658,6 +706,9 @@ On commence par diviser par 2 la valeur contenue dans \texttt{r0}. Puis, on enl�
         \subsubsection*{\textbf{5.4} Écrire un code qui lit deux entiers au clavier, puis affiche le résultat de leur multiplication (modulo 256) à l'écran.}
 
 \fm{../asm/q5_4/read2_mul.s}{../asm/q5\_4/read2\_mul.s}
+
+En considérant l'hypothèse simplificatrice que les entiers sont des chiffres entre 0 et 9, on lit les deux entrées de l'utilisateur que l'on vérifie être des chiffres.
+On les convertit ensuite en leur valeur décimal et on les multiplie.
 
 \clearpage
         
@@ -701,11 +752,11 @@ Ajout des nouvelles déclarations \texttt{ld} et \texttt{st} dans le type de \te
 
 Suppression de l'ancienne syntaxe de \texttt{ld} dans \texttt{parser.mly}.
 
+\clearpage
+
 \fmo{../patch/digcomp_jb.patch.dbu}{parser.mly 2}{196}{196}
 
 Suppression de l'ancienne syntaxe de \texttt{st} dans \texttt{parser.mly}.
-
-\clearpage
 
 \fmo{../patch/digcomp_jb.patch.dbu}{parser.mly 3}{200}{200}
 
@@ -723,6 +774,9 @@ Ajout de la nouvelle syntaxe de \texttt{st} dans \texttt{parser.mly}.
 
         \hcf{clock_jr.png}{Ajout du bit de contrôle \textit{do\_jr} au compteur de programme.}
 
+    \hcf{jmp_calc.png}{Calcul de l'adresse de saut.}
+    Calculated \texttt{jr} jump address.
+    
         \newpage
         
 \section{ALU (Arithmetic Logic Unit)}
@@ -1028,7 +1082,7 @@ Modification dans la déclaration du type \textit{instr} des instructions \textt
 
 \fmo{../patch/digcomp_jb.patch.dbu}{../patch/digcomp\_jb.patch.dbu}{133}{141}
 
-Ajout du numéro en ligne en hexadécimal dans le dump.
+Ajout du numéro en ligne en hexadécimal dans le \textit{dump}.
 
 \clearpage
 
@@ -1070,7 +1124,7 @@ Ce code teste les instructions \texttt{not, lsr, or} et \texttt{and}.
 
 \subsection{Vérification des opérations arithmétiques (\texttt{add / addi, sub / subi, mul / muli})}
 
-\fm{../tests/}{../tests/arith.s}
+\fm{../tests/arith.s}{../tests/arith.s}
 
 Le programme \texttt{arith.s} teste les fonctions \texttt{add / addi}, \texttt{sub / subi} et \texttt{mul / muli}.
 
