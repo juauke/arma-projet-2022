@@ -30,13 +30,12 @@ For instance, here is what each program verifies:
 
 ## Compiler patching
 
-1. Add your previous version <br/>
-Copy your previous digcomp binary to `patch/` as **digcomp_orig** 
+1. Add your previous version: <br/>
+Copy your previous digcomp binary to `patch/` as **digcomp_orig** .
 
-2. Run the patch
-
-$ cd digcomp <br/>
-$ make patch
+2. Run the patch:
+* $ cd digcomp <br/>
+* $ make patch
 
 This will make the patch from the file you copied to patch and my version of digcomp and install it in `digcomp/` .
 
